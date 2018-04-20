@@ -1,0 +1,33 @@
+month-selector,
+year-selector {
+    position: absolute;
+    z-index: 1;
+    background-color: white;
+    height: 100%;
+    display: flex;
+    align-items: stretch;
+    transition: all .3s ease-out;
+
+    &.off {
+        transform: translateY(-100%);
+    }
+
+    > ul {
+        display: flex;
+        flex-wrap: wrap;
+        align-content: stretch;
+        cursor: pointer;
+
+        > li {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: none;
+            width: 33.3333%;
+
+            &:hover {
+                background-color: #d8e7f1;
+            }
+        }
+    }
+}

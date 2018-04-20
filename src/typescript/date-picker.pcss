@@ -1,0 +1,91 @@
+date-picker {
+    max-width: 200px;
+    display: block;
+
+    .icon.icon {
+        cursor: pointer;
+        pointer-events: initial !important;
+        color: #fff;
+    }
+
+    .head {
+        display: flex;
+        margin-top: -4px;
+        padding-bottom: 4px;
+
+        div {
+            flex: auto;
+            text-align: center;
+        }
+
+        span {
+            flex: 0 0 27px;
+            text-align: center;
+            cursor: pointer;
+
+            .icon.icon {
+                height: 1rem;
+                width: 1rem;
+                position: relative;
+                color: black;
+            }
+        }
+    }
+
+    .dropdown {
+        width: 27px;
+        user-select: none;
+    }
+
+    .dropdown-menu {
+        width: 198px;
+    }
+
+    .dropdown-content {
+        background-color: whitesmoke;
+        padding-bottom: 0;
+    }
+
+    .viewport {
+        border-radius: 4px;
+        padding-bottom: .5rem;
+        position: relative;
+    }
+
+    .month {
+        font-size: .75rem;
+
+        ul {
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+
+            &.weekdays {
+                background-color: whitesmoke;
+                color: #a4a4a4;
+            }
+
+            li {
+                flex: 0 0 calc(100% / 7);
+                display: block;
+                text-align: center;
+                line-height: 1.5rem;
+
+                &.today {
+                    background-color: #cc415d !important;
+                    color: white !important;
+                }
+            }
+
+            &.dates {
+                -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+                cursor: pointer;
+                background-color: white;
+            }
+        }
+    }
+
+    .months:not(.drag) .dates > li:hover {
+        background-color: #d8e7f1;
+    }
+}

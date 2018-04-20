@@ -1,0 +1,52 @@
+{
+    "name": "@feather-ts/datepicker",
+    "version": "1.0.24",
+    "description": "feather-ts date-picker component",
+    "types": "dist/datepicker.d.ts",
+    "main": "dist/datepicker.js",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/feather-ts/datepicker.git"
+    },
+    "author": "Andreas Herd",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/feather-ts/datepicker/issues"
+    },
+    "homepage": "https://github.com/feather-ts/datepicker#readme",
+    "dependencies": {
+        "@feather-ts/feather-ts": "2.0.28",
+        "@feather-ts/ui-common": "1.0.30",
+        "@fortawesome/fontawesome-free-webfonts": "1.0.6",
+        "bulma": "0.7.0",
+        "fecha": "2.3.3"
+    },
+    "devDependencies": {
+        "npm-run-all": "4.1.2",
+        "parcel-bundler": "1.7.1",
+        "postcss": "6.0.21",
+        "postcss-cssnext": "3.1.0",
+        "postcss-import": "11.1.0",
+        "postcss-nested": "3.0.0",
+        "rimraf": "2.6.2",
+        "stylelint": "9.2.0",
+        "stylelint-config-standard": "18.2.0",
+        "tslint": "5.9.1",
+        "typescript": "2.8.3"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "watch": "parcel src/html/index.html -p 9080",
+        "npm:version": "npm --no-git-tag-version version patch",
+        "ui:compile": "tsc -d",
+        "clean": "rimraf dist",
+        "css:compile": "postcss src/typescript/**/*.pcss --dir dist --base",
+        "prepare": "npm-run-all clean npm:version css:compile ui:compile",
+        "test": "mocha --require ts-node/register --require src/javascript/mocha-setup.js src/typescript/**/*.spec.ts"
+    }
+}
