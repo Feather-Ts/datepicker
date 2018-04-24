@@ -24,7 +24,7 @@ export class DatePicker extends FormWidget<DatePickerConfig> {
     @TemplateNode('input.input') input
     element: HTMLElement
 
-    showDropDown = true
+    showDropDown = false
     size = 'is-small'
     months: Month[] = []
     currentMonth: Date
