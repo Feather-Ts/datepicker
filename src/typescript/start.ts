@@ -1,7 +1,5 @@
 import {DatePickerConfig} from './date-picker'
-import {Construct, start, Widget} from '@feather-ts/feather-ts/dist/decorators/construct'
-import {render} from '@feather-ts/feather-ts/dist/core/bind'
-import {Template} from '@feather-ts/feather-ts/dist/decorators/template'
+import {Construct, render, start, Template, Widget} from '@feather-ts/feather-ts'
 import './date-picker'
 import './start.pcss'
 

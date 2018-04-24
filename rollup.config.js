@@ -38,7 +38,7 @@ export default {
                 },
                 clean: true
             }
-        }),
+        })
     ],
     external: [
         '@fortawesome/fontawesome-free-webfonts',
