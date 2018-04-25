@@ -1,11 +1,11 @@
-import {format as formatDate} from 'fecha'
-import {Day} from './day'
-import {yearOffset} from './date-utils'
-import './selector.pcss'
 import {Construct, Widget} from '@feather-ts/feather-ts/dist/decorators/construct'
 import {render} from '@feather-ts/feather-ts/dist/core/bind'
 import {range} from '@feather-ts/feather-ts/dist/utils/arrays'
 import {Template} from '@feather-ts/feather-ts/dist/decorators/template'
+import {format as formatDate} from 'fecha'
+import {Day} from './day'
+import {yearOffset} from './date-utils'
+import './selector.pcss'
 
 @Construct({selector: 'year-selector'})
 export class YearSelector implements Widget {
