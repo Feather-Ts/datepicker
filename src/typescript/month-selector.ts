@@ -1,4 +1,7 @@
-import {Construct, range, render, Template, Widget} from '@feather-ts/feather-ts'
+import {Construct, Widget} from '@feather-ts/feather-ts/dist/decorators/construct'
+import {range} from '@feather-ts/feather-ts/dist/utils/arrays'
+import {render} from '@feather-ts/feather-ts/dist/core/bind'
+import {Template} from '@feather-ts/feather-ts/dist/decorators/template'
 import {format as formatDate} from 'fecha'
 import {Day} from './day'
 import './selector.pcss'

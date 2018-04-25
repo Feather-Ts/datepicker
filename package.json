@@ -1,6 +1,6 @@
 {
     "name": "@feather-ts/datepicker",
-    "version": "1.0.37",
+    "version": "1.0.47",
     "description": "feather-ts date-picker component",
     "types": "dist/datepicker.d.ts",
     "main": "dist/datepicker.js",
@@ -15,11 +15,15 @@
     },
     "homepage": "https://github.com/feather-ts/datepicker#readme",
     "dependencies": {
-        "@feather-ts/feather-ts": "2.0.40",
-        "@feather-ts/ui-common": "1.0.44",
+        "@feather-ts/feather-ts": "^2.0.50",
+        "@feather-ts/ui-common": "^1.0.61",
         "@fortawesome/fontawesome-free-webfonts": "1.0.6",
         "bulma": "0.7.0",
         "fecha": "2.3.3"
+    },
+    "peerDependencies": {
+        "@feather-ts/feather-ts": "^2.0.50",
+        "@feather-ts/ui-common": "^1.0.61"
     },
     "devDependencies": {
         "npm-run-all": "4.1.2",

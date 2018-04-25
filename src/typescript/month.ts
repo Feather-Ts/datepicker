@@ -1,4 +1,5 @@
-import {ArrayWidget, Template} from '@feather-ts/feather-ts'
+import {ArrayWidget} from '@feather-ts/feather-ts/dist/decorators/construct'
+import {Template} from '@feather-ts/feather-ts/dist/decorators/template'
 import {getRenderableMonth} from './date-utils'
 import {Day} from './day'
 import './date-picker.pcss'

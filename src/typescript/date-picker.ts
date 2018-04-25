@@ -1,10 +1,15 @@
+import {SnapScroll} from '@feather-ts/ui-common/dist/snap-scroll'
 import {format, parse} from 'fecha'
 import {Month} from './month'
 import {monthOffset, yearOffset} from './date-utils'
 import {YearSelector} from './year-selector'
-import {FormWidget, FormWidgetConfig} from '@feather-ts/ui-common/'
-import {documentClick, SnapScroll} from '@feather-ts/ui-common'
-import {Construct, findWidget, On, render, Scope, Template, TemplateNode} from '@feather-ts/feather-ts'
+import {Construct} from '@feather-ts/feather-ts/dist/decorators/construct'
+import {TemplateNode} from '@feather-ts/feather-ts/dist/decorators/template-node'
+import {findWidget, render} from '@feather-ts/feather-ts/dist/core/bind'
+import {On, Scope} from '@feather-ts/feather-ts/dist/decorators/event'
+import {Template} from '@feather-ts/feather-ts/dist/decorators/template'
+import {FormWidget, FormWidgetConfig} from '@feather-ts/ui-common/dist/form-widget'
+import {documentClick} from '@feather-ts/ui-common/dist/util'
 import './year-selector'
 import './month-selector'
 import './date-picker.pcss'
@@ -126,6 +131,7 @@ export class DatePicker extends FormWidget<DatePickerConfig> {
     }
 
     slideChanged(slide: number) {
+        console.log(this)
         this.currentMonth = this.months[slide].date
         if (slide === 0) {
             this.months.unshift(new Month(monthOffset(this.currentMonth, -1)))

@@ -1,4 +1,5 @@
-import {ArrayWidget, Template} from '@feather-ts/feather-ts'
+import {ArrayWidget} from '@feather-ts/feather-ts/dist/decorators/construct'
+import {Template} from '@feather-ts/feather-ts/dist/decorators/template'
 import {format as formatDate} from 'fecha'
 import {isToday} from './date-utils'
 import './date-picker.pcss'

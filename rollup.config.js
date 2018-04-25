@@ -23,7 +23,6 @@ export default {
             namedExports: {
                 'node_modules/fecha/fecha.js': ['format', 'parse']
             }
-
         }),
         resolve({
             browser: true
@@ -38,7 +37,7 @@ export default {
                 },
                 clean: true
             }
-        })
+        }),
     ],
     external: [
         '@fortawesome/fontawesome-free-webfonts',
