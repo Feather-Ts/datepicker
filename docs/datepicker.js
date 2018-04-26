@@ -503,13 +503,24 @@ var datepicker = (function (exports) {
 
     });
 
-    unwrapExports(construct);
+    var construct$1 = unwrapExports(construct);
     var construct_1 = construct.ConstructRegistry;
     var construct_2 = construct.Singletons;
     var construct_3 = construct.start;
     var construct_4 = construct.Construct;
     var construct_5 = construct.addToConstructorQueue;
     var construct_6 = construct.runConstructorQueue;
+
+    var construct$2 = /*#__PURE__*/Object.freeze({
+        default: construct$1,
+        __moduleExports: construct,
+        ConstructRegistry: construct_1,
+        Singletons: construct_2,
+        start: construct_3,
+        Construct: construct_4,
+        addToConstructorQueue: construct_5,
+        runConstructorQueue: construct_6
+    });
 
     var functions = createCommonjsModule(function (module, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -523,23 +534,6 @@ var datepicker = (function (exports) {
     exports.isFunction = function (functionToCheck) {
         return functionToCheck && getType.call(functionToCheck) === '[object Function]';
     };
-    var lastCall = new WeakMap();
-    var throttles = new WeakMap();
-    exports.throttle = function (func, time) {
-        var now = +new Date();
-        var lastCallTime = (lastCall.get(func) || 0);
-        if (now - time >= lastCallTime) {
-            func();
-            lastCall.set(func, now);
-        }
-        else {
-            clearTimeout(throttles.get(func));
-            throttles.set(func, setTimeout(function () {
-                lastCall.set(func, now);
-                func();
-            }));
-        }
-    };
     exports.isDef = function (x) { return typeof x !== 'undefined'; };
     exports.isUndef = function (x) { return !exports.isDef(x); };
 
@@ -548,19 +542,19 @@ var datepicker = (function (exports) {
     var functions$1 = unwrapExports(functions);
     var functions_1 = functions.compose;
     var functions_2 = functions.isFunction;
-    var functions_3 = functions.throttle;
-    var functions_4 = functions.isDef;
-    var functions_5 = functions.isUndef;
+    var functions_3 = functions.isDef;
+    var functions_4 = functions.isUndef;
 
     var functions$2 = /*#__PURE__*/Object.freeze({
         default: functions$1,
         __moduleExports: functions,
         compose: functions_1,
         isFunction: functions_2,
-        throttle: functions_3,
-        isDef: functions_4,
-        isUndef: functions_5
+        isDef: functions_3,
+        isUndef: functions_4
     });
+
+    var construct_1$1 = ( construct$2 && construct$1 ) || construct$2;
 
     var functions_1$1 = ( functions$2 && functions$1 ) || functions$2;
 
@@ -669,7 +663,7 @@ var datepicker = (function (exports) {
     exports.parseHooks = function (nodes, hookMap) {
         if (hookMap === void 0) { hookMap = {}; }
         var hooks = [];
-        var selectors = Object.keys(construct.ConstructRegistry);
+        var selectors = Object.keys(construct_1$1.ConstructRegistry);
         var match;
         var _loop_1 = function (pos, n) {
             var node = nodes[pos];
@@ -760,7 +754,7 @@ var datepicker = (function (exports) {
 
     });
 
-    unwrapExports(template);
+    var template$1 = unwrapExports(template);
     var template_1 = template.parsedTemplates;
     var template_2 = template.SINGLE_CURLIES;
     var template_3 = template.CURLIES;
@@ -776,6 +770,25 @@ var datepicker = (function (exports) {
     var template_13 = template.parseHooks;
     var template_14 = template.Template;
 
+    var template$2 = /*#__PURE__*/Object.freeze({
+        default: template$1,
+        __moduleExports: template,
+        parsedTemplates: template_1,
+        SINGLE_CURLIES: template_2,
+        CURLIES: template_3,
+        selfClosingTags: template_4,
+        openTags: template_5,
+        TemplateTokenType: template_6,
+        TemplateTokenInfo: template_7,
+        breakApartTextNodes: template_8,
+        getFragment: template_9,
+        ParsedTemplate: template_10,
+        getTemplate: template_11,
+        parseTemplate: template_12,
+        parseHooks: template_13,
+        Template: template_14
+    });
+
     var transformer = createCommonjsModule(function (module, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
 
@@ -783,7 +796,7 @@ var datepicker = (function (exports) {
         arrayidentity: function () { return function () { return true; }; }
     };
     exports.Transformer = function () { return function (proto, method) {
-        construct.addToConstructorQueue(proto.constructor, function (widget) {
+        construct_1$1.addToConstructorQueue(proto.constructor, function (widget) {
             exports.TransformerRegistry[method] = widget[method].bind(widget);
         });
     }; };
@@ -908,7 +921,7 @@ var datepicker = (function (exports) {
             listeners.push(listener);
         }
     };
-    function domArrayListener(arr, el, filter, onItemAdded) {
+    function domArrayListener(arr, el, filter, update, onItemAdded) {
         var firstChild = el.firstElementChild; // usually null, lists that share a parent with other nodes are prepended.
         var nodeVisible = [];
         var elementMap = new WeakMap();
@@ -937,6 +950,7 @@ var datepicker = (function (exports) {
                         elementMap.delete(del);
                         cleanup_1$1.cleanUp(node);
                     }
+                    update();
                 }
                 if (added.length) {
                     for (var _a = 0, added_1 = added; _a < added_1.length; _a++) {
@@ -945,6 +959,7 @@ var datepicker = (function (exports) {
                             elementMap.set(item, onItemAdded(item));
                         }
                     }
+                    update();
                 }
                 patch.splice.apply(patch, [index, deleteCount].concat(added.map(function () { return true; })));
                 for (var i = 0, n = arr.length; i < n; i++) {
@@ -1059,6 +1074,8 @@ var datepicker = (function (exports) {
         injectTemplateNodes: templateNode_2
     });
 
+    var template_1$1 = ( template$2 && template$1 ) || template$2;
+
     var transformer_1$1 = ( transformer$2 && transformer$1 ) || transformer$2;
 
     var arrays_1$1 = ( arrays$2 && arrays$1 ) || arrays$2;
@@ -1090,14 +1107,14 @@ var datepicker = (function (exports) {
     var UPDATE_KEY = '__update__';
     var Update = function () { return new CustomEvent(UPDATE_KEY, { bubbles: true, cancelable: false, scoped: false }); };
     var updateDomValue = function (node, info, value, oldValue) {
-        if (info.type === template.TemplateTokenType.TEXT) {
+        if (info.type === template_1$1.TemplateTokenType.TEXT) {
             node.textContent = functions_1$1.isDef(value) ? value : '';
         }
-        else if (info.type === template.TemplateTokenType.CLASS) {
+        else if (info.type === template_1$1.TemplateTokenType.CLASS) {
             !!oldValue && node.classList.remove(("" + oldValue).replace(/\s+/g, '-')) ||
                 !!value && node.classList.add(("" + value).replace(/\s+/g, '-'));
         }
-        else if (info.type === template.TemplateTokenType.ATTRIBUTE || info.type === template.TemplateTokenType.PROPERTY) {
+        else if (info.type === template_1$1.TemplateTokenType.ATTRIBUTE || info.type === template_1$1.TemplateTokenType.PROPERTY) {
             var attributeName = info.attribute || info.path();
             if (/checked|value/i.test(attributeName)) {
                 node[attributeName] = value;
@@ -1112,12 +1129,12 @@ var datepicker = (function (exports) {
         }
         return value;
     };
-    var updateDom = function (widget, template$$1, transformMap, oldValueMap) {
+    var updateDom = function (widget, template, transformMap, oldValueMap) {
         var domChanged = false;
-        var valueMap = getCurrentValueMap(widget, template$$1, transformMap);
-        for (var i = 0, n = template$$1.infos.length; i < n; i++) {
-            var info = template$$1.infos[i];
-            if (info.type === template.TemplateTokenType.TAG) {
+        var valueMap = getCurrentValueMap(widget, template, transformMap);
+        for (var i = 0, n = template.infos.length; i < n; i++) {
+            var info = template.infos[i];
+            if (info.type === template_1$1.TemplateTokenType.TAG) {
                 continue;
             }
             var oldValue = oldValueMap[i], value = valueMap[i];
@@ -1127,7 +1144,7 @@ var datepicker = (function (exports) {
             }
             if (oldValue !== value) {
                 domChanged = true;
-                oldValueMap[i] = updateDomValue(template$$1.nodes[info.position], info, value, oldValue);
+                oldValueMap[i] = updateDomValue(template.nodes[info.position], info, value, oldValue);
             }
         }
         return {
@@ -1136,12 +1153,12 @@ var datepicker = (function (exports) {
         };
     };
     var bindWidget = function (widget, rootInfo, node) {
-        var subWidget = new (Function.prototype.bind.apply(construct.ConstructRegistry[rootInfo.selector]));
+        var subWidget = new (Function.prototype.bind.apply(construct_1$1.ConstructRegistry[rootInfo.selector]));
         objects_1$1.ensure(subWidgets, widget, [subWidget]);
         var attributes = Array.prototype.slice.call(node.attributes);
         var _loop_1 = function (attribute, i, n) {
             attribute = attributes[i];
-            var match = attribute.value.match(template.CURLIES);
+            var match = attribute.value.match(template_1$1.CURLIES);
             var subProp = strings_1$1.camelCaseFromHyphens(attribute.name);
             if (match) {
                 var prop_1 = match[1];
@@ -1161,7 +1178,7 @@ var datepicker = (function (exports) {
                 }
                 node.removeAttribute(attribute.name);
             }
-            else if (match = attribute.value.match(template.SINGLE_CURLIES)) {
+            else if (match = attribute.value.match(template_1$1.SINGLE_CURLIES)) {
                 subWidget[subProp] = new Function("return " + match[1])();
                 node.removeAttribute(attribute.name);
             }
@@ -1175,7 +1192,7 @@ var datepicker = (function (exports) {
             _loop_1(attribute, i, n);
             attribute = out_attribute_1;
         }
-        construct.runConstructorQueue(subWidget, node);
+        construct_1$1.runConstructorQueue(subWidget, node);
     };
     var FilteredArray = /** @class */ (function () {
         function FilteredArray() {
@@ -1195,28 +1212,28 @@ var datepicker = (function (exports) {
             return v;
         }
     };
-    var getCurrentValueMap = function (widget, template$$1, transformMap) {
+    var getCurrentValueMap = function (widget, template, transformMap) {
         var map = [];
-        for (var i = 0, n = template$$1.infos.length; i < n; i++) {
-            map[i] = getInfoValue(widget, template$$1.infos[i], transformMap);
+        for (var i = 0, n = template.infos.length; i < n; i++) {
+            map[i] = getInfoValue(widget, template.infos[i], transformMap);
         }
         return map;
     };
-    var bindArray = function (array, parentNode, widget, info, templateName) {
+    var bindArray = function (array, parentNode, widget, info, templateName, update) {
         var method = info.arrayTransformer(), transformer = (widget[method] || transformer_1$1.TransformerRegistry[method]).bind(widget);
-        var listener = arrays_1$1.domArrayListener(array, parentNode, transformer(), function (item) {
-            var template$$1 = template.getTemplate(item, templateName()), node = template$$1.nodes[1];
-            construct.runConstructorQueue(item, node);
-            exports.connectTemplate(item, node, template$$1, parentNode);
+        var listener = arrays_1$1.domArrayListener(array, parentNode, transformer(), update, function (item) {
+            var template = template_1$1.getTemplate(item, templateName()), node = template.nodes[1];
+            construct_1$1.runConstructorQueue(item, node);
+            exports.connectTemplate(item, node, template, parentNode);
             return node;
         });
         arrays_1$1.observeArray(array, listener);
         return listener;
     };
-    var getTransformMap = function (widget, template$$1) {
+    var getTransformMap = function (widget, template) {
         var map = {};
-        for (var info = void 0, i = 0, n = template$$1.infos.length; i < n; i++) {
-            info = template$$1.infos[i];
+        for (var info = void 0, i = 0, n = template.infos.length; i < n; i++) {
+            info = template.infos[i];
             var transformers = info.transformers();
             if (transformers) {
                 map[info.curly()] = transformFactory(widget, transformers);
@@ -1224,11 +1241,11 @@ var datepicker = (function (exports) {
         }
         return map;
     };
-    var findTemplateInfoInNode = function (template$$1, position) {
-        return template$$1.infos.find(function (i) { return i.position === position && i.attribute === 'template'; });
+    var findTemplateInfoInNode = function (template, position) {
+        return template.infos.find(function (i) { return i.position === position && i.attribute === 'template'; });
     };
-    var findPropertyInfoInNode = function (template$$1, position) {
-        return template$$1.infos.find(function (i) { return i.position === position && i.type === template.TemplateTokenType.PROPERTY; });
+    var findPropertyInfoInNode = function (template, position) {
+        return template.infos.find(function (i) { return i.position === position && i.type === template_1$1.TemplateTokenType.PROPERTY; });
     };
     var addTemplateAttributeHook = function (widget, node, info, transformMap) {
         var value = getInfoValue(widget, info, transformMap);
@@ -1245,24 +1262,24 @@ var datepicker = (function (exports) {
         }
         node.removeAttribute('template');
     };
-    var bindTemplateInfos = function (template$$1, widget, updateTemplate, transformMap) {
+    var bindTemplateInfos = function (template, widget, updateTemplate, transformMap) {
         var bound = [];
-        var infos = template$$1.infos;
+        var infos = template.infos;
         var _loop_2 = function (info, i, n) {
             info = infos[i];
             var path = info.path();
             var value = objects_1$1.deepValue(widget, info.path());
-            var node = template$$1.nodes[info.position];
-            if (info.type === template.TemplateTokenType.TAG) {
+            var node = template.nodes[info.position];
+            if (info.type === template_1$1.TemplateTokenType.TAG) {
                 bindWidget(widget, info, node);
             }
-            else if (info.type === template.TemplateTokenType.PROPERTY) {
+            else if (info.type === template_1$1.TemplateTokenType.PROPERTY) {
                 if (Array.isArray(value)) {
                     // check for dynamic template attribute
-                    var templateInfo_1 = findTemplateInfoInNode(template$$1, info.position);
+                    var templateInfo_1 = findTemplateInfoInNode(template, info.position);
                     var attributeValue_1 = node.getAttribute('template') || undefined;
                     var templateName = void 0;
-                    if (functions_1$1.isDef(templateInfo_1) && template.CURLIES.test(attributeValue_1)) {
+                    if (functions_1$1.isDef(templateInfo_1) && template_1$1.CURLIES.test(attributeValue_1)) {
                         templateName = function () { return getInfoValue(widget, templateInfo_1, transformMap); };
                         objects_1$1.addPropertyListener(widget, templateInfo_1.path(), function () {
                             value.splice.apply(value, [0, value.length].concat(value));
@@ -1271,15 +1288,15 @@ var datepicker = (function (exports) {
                     else {
                         templateName = function () { return attributeValue_1; };
                     }
-                    bindArray(value, node, widget, info, templateName);
+                    bindArray(value, node, widget, info, templateName, updateTemplate);
                     node.removeAttribute('template');
                 }
             }
             else if (functions_1$1.isFunction(value)) {
                 computed_1$1.createComputedListener(widget, info, updateTemplate);
             }
-            else if (info.type === template.TemplateTokenType.TEMPLATE) {
-                var propInfo = findPropertyInfoInNode(template$$1, info.position);
+            else if (info.type === template_1$1.TemplateTokenType.TEMPLATE) {
+                var propInfo = findPropertyInfoInNode(template, info.position);
                 if (functions_1$1.isUndef(propInfo) || !Array.isArray(objects_1$1.deepValue(widget, propInfo.path()))) {
                     addTemplateAttributeHook(widget, node, info, transformMap);
                 }
@@ -1296,19 +1313,21 @@ var datepicker = (function (exports) {
             info = out_info_1;
         }
     };
-    exports.connectTemplate = function (widget, el, template$$1, parentNode) {
+    exports.connectTemplate = function (widget, el, template, parentNode) {
         if (parentNode === void 0) { parentNode = el.parentNode; }
-        var transformMap = getTransformMap(widget, template$$1);
-        var res = updateDom(widget, template$$1, transformMap, []);
+        var transformMap = getTransformMap(widget, template);
+        var res = updateDom(widget, template, transformMap, []);
         var updateTemplate = function () {
-            res = updateDom(widget, template$$1, transformMap, res.valueMap);
-            if (res.change) {
-                parentNode.dispatchEvent(Update()); // let's inform parent widgets
+            if (!mutedWidget.has(widget)) {
+                res = updateDom(widget, template, transformMap, res.valueMap);
+                if (res.change) {
+                    parentNode.dispatchEvent(Update()); // let's inform parent widgets
+                }
             }
         };
-        el.addEventListener(UPDATE_KEY, function () { return functions_1$1.throttle(updateTemplate, 80); });
-        bindTemplateInfos(template$$1, widget, updateTemplate, transformMap);
-        template_node_1.injectTemplateNodes(widget, template$$1.nodes);
+        el.addEventListener(UPDATE_KEY, updateTemplate);
+        bindTemplateInfos(template, widget, updateTemplate, transformMap);
+        template_node_1.injectTemplateNodes(widget, template.nodes);
     };
     var transformFactory = function (widget, transformers) {
         return functions_1$1.compose(transformers.map(function (m) {
@@ -1328,9 +1347,9 @@ var datepicker = (function (exports) {
             }
         }
         el.innerHTML = '';
-        var template$$1 = template.getTemplate(widget, name);
-        exports.connectTemplate(widget, el, template$$1);
-        el.appendChild(template$$1.doc);
+        var template = template_1$1.getTemplate(widget, name);
+        exports.connectTemplate(widget, el, template);
+        el.appendChild(template.doc);
     };
     exports.findWidgets = function (widget, type) {
         return subWidgets.get(widget).filter(function (t) { return Object.getPrototypeOf(t) === type.prototype; });
@@ -1338,14 +1357,39 @@ var datepicker = (function (exports) {
     exports.findWidget = function (widget, type) {
         return exports.findWidgets(widget, type)[0];
     };
+    var mutedWidget = new WeakMap();
+    exports.Batch = function () { return function (proto, method) {
+        construct_1$1.addToConstructorQueue(proto.constructor, function (widget, el) {
+            var old = widget[method];
+            Object.defineProperty(widget, method, {
+                value: function () {
+                    mutedWidget.set(widget, true);
+                    old.apply(widget, arguments);
+                    mutedWidget.delete(widget);
+                    el.dispatchEvent(Update());
+                }
+            });
+        });
+    }; };
 
     });
 
-    unwrapExports(bind);
+    var bind$1 = unwrapExports(bind);
     var bind_1 = bind.connectTemplate;
     var bind_2 = bind.render;
     var bind_3 = bind.findWidgets;
     var bind_4 = bind.findWidget;
+    var bind_5 = bind.Batch;
+
+    var bind$2 = /*#__PURE__*/Object.freeze({
+        default: bind$1,
+        __moduleExports: bind,
+        connectTemplate: bind_1,
+        render: bind_2,
+        findWidgets: bind_3,
+        findWidget: bind_4,
+        Batch: bind_5
+    });
 
     var event = createCommonjsModule(function (module, exports) {
     var __assign = (commonjsGlobal && commonjsGlobal.__assign) || Object.assign || function(t) {
@@ -1404,14 +1448,21 @@ var datepicker = (function (exports) {
     }; };
     exports.On = function (conf) { return function (proto, method) {
         var finalConf = __assign({}, conf, { method: method, event: conf.event || method, scope: Scope.Delegate });
-        construct.addToConstructorQueue(proto.constructor, attachEvents(finalConf));
+        construct_1$1.addToConstructorQueue(proto.constructor, attachEvents(finalConf));
     }; };
 
     });
 
-    unwrapExports(event);
+    var event$1 = unwrapExports(event);
     var event_1 = event.Scope;
     var event_2 = event.On;
+
+    var event$2 = /*#__PURE__*/Object.freeze({
+        default: event$1,
+        __moduleExports: event,
+        Scope: event_1,
+        On: event_2
+    });
 
     var panX = createCommonjsModule(function (module, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -1508,7 +1559,7 @@ var datepicker = (function (exports) {
     exports.PanX = function (conf) {
         if (conf === void 0) { conf = {}; }
         return function (proto, method) {
-            construct.addToConstructorQueue(proto.constructor, function (widget, node) {
+            construct_1$1.addToConstructorQueue(proto.constructor, function (widget, node) {
                 initPanX(widget, method, conf, node);
             });
         };
@@ -1556,6 +1607,8 @@ var datepicker = (function (exports) {
 
     var css = ".viewport {\n    overflow: hidden;\n    width: 100%;\n    -ms-touch-action: none !important;\n        touch-action: none !important;\n}\n\n.snap-scroll {\n    display: -webkit-box;\n    display: -ms-flexbox;\n    display: flex;\n    -webkit-box-orient: horizontal;\n    -webkit-box-direction: normal;\n        -ms-flex-direction: row;\n            flex-direction: row;\n    will-change: transform;\n    width: 100%;\n}\n\n.snap-scroll > * {\n        display: block;\n        -webkit-box-flex: 0;\n            -ms-flex: none;\n                flex: none;\n        width: 100%;\n    }\n\n.snap-scroll.animate {\n        -webkit-transition: all .3s ease-out;\n        transition: all .3s ease-out;\n    }\n\n";
     styleInject(css);
+
+    var event_1$1 = ( event$2 && event$1 ) || event$2;
 
     var pan_x_1 = ( panX$2 && panX$1 ) || panX$2;
 
@@ -1630,10 +1683,10 @@ var datepicker = (function (exports) {
             pan_x_1.PanX()
         ], SnapScroll.prototype, "panX1", null);
         tslib_es6.__decorate([
-            event.On({})
+            event_1$1.On({})
         ], SnapScroll.prototype, "transitionend", null);
         SnapScroll = tslib_es6.__decorate([
-            construct.Construct({ selector: '.snap-scroll' })
+            construct_1$1.Construct({ selector: '.snap-scroll' })
         ], SnapScroll);
         return SnapScroll;
     }());
@@ -2129,13 +2182,15 @@ var datepicker = (function (exports) {
         return YearSelector;
     }());
 
+    var bind_1$1 = ( bind$2 && bind$1 ) || bind$2;
+
     var formWidget = createCommonjsModule(function (module, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
 
     var FormWidget = /** @class */ (function () {
         function FormWidget() {
             var _this = this;
-            this.init = function (el) { return bind.render(_this, el); };
+            this.init = function (el) { return bind_1$1.render(_this, el); };
         }
         return FormWidget;
     }());
@@ -2166,6 +2221,504 @@ var datepicker = (function (exports) {
         ], MonthSelector);
         return MonthSelector;
     }());
+
+    var fetch_1 = createCommonjsModule(function (module, exports) {
+    var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
+        var extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return function (d, b) {
+            extendStatics(d, b);
+            function __() { this.constructor = d; }
+            d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+        };
+    })();
+    var __assign = (commonjsGlobal && commonjsGlobal.__assign) || Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+
+
+
+
+    var fetchErrors = new WeakMap();
+    var defaultProcessor = function (res) { return res.json(); };
+    var handleErrors = function (response) {
+        if (!response.ok) {
+            throw new ResponseError(response.statusText, response);
+        }
+        return response;
+    };
+    var ResponseError = /** @class */ (function (_super) {
+        __extends(ResponseError, _super);
+        function ResponseError(message, response) {
+            var _this = _super.call(this, message) || this;
+            _this.response = response;
+            return _this;
+        }
+        return ResponseError;
+    }(Error));
+    var execFetch = function (url, conf, processor) {
+        if (processor === void 0) { processor = defaultProcessor; }
+        return fetch(url, conf)
+            .then(handleErrors)
+            .then(processor);
+    };
+    var Xhr = function (fetchMethod) { return function (conf) { return function (proto, method) {
+        construct_1$1.addToConstructorQueue(proto.constructor, function (widget) {
+            var oldMethod = proto[method];
+            widget[method] = function (body) {
+                var payload = [body]
+                    .filter(functions_1$1.isDef)
+                    .map(function (body) { return typeof body === 'string' ? body : JSON.stringify(body); });
+                var finalConf = Object
+                    .keys(conf)
+                    .reduce(function (p, c) {
+                    return (p[c] = functions_1$1.isFunction(p[c]) ? p[c].call(widget) : p[c]) && p;
+                }, __assign({}, conf, { url: strings_1$1.format(conf.url, widget), body: payload[0], method: fetchMethod }));
+                return execFetch(finalConf.url, finalConf, finalConf.processor)
+                    .then(function (res) {
+                    oldMethod.apply(widget, payload.concat([res]));
+                    return res;
+                }) // if await should not be used
+                    .catch(function (error) {
+                    if (fetchErrors.has(proto)) {
+                        var errFunc = fetchErrors.get(proto)["" + error.response.status];
+                        if (errFunc) {
+                            widget[errFunc].call(widget, error);
+                        }
+                    }
+                });
+            };
+        });
+    }; }; };
+    exports.Get = Xhr('GET');
+    exports.Post = Xhr('POST');
+    exports.Delete = Xhr('DELETE');
+    exports.Put = Xhr('PUT');
+    exports.FetchError = function (status) { return function (proto, method) {
+        objects_1$1.ensure(fetchErrors, proto, (_a = {}, _a["" + status] = method, _a));
+        var _a;
+    }; };
+
+    });
+
+    var fetch$1 = unwrapExports(fetch_1);
+    var fetch_2 = fetch_1.Get;
+    var fetch_3 = fetch_1.Post;
+    var fetch_4 = fetch_1.Delete;
+    var fetch_5 = fetch_1.Put;
+    var fetch_6 = fetch_1.FetchError;
+
+    var fetch$2 = /*#__PURE__*/Object.freeze({
+        default: fetch$1,
+        __moduleExports: fetch_1,
+        Get: fetch_2,
+        Post: fetch_3,
+        Delete: fetch_4,
+        Put: fetch_5,
+        FetchError: fetch_6
+    });
+
+    var localStorage = createCommonjsModule(function (module, exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+
+
+
+
+    var localStorageProperties = new WeakMap();
+    var storableProperties = new WeakMap();
+    var widgetId = function (widget) {
+        var id = widget.id || widget.name || widget.title || widget.constructor.name;
+        return functions_1$1.isFunction(id) ? id() : id;
+    };
+    var store = function (key, value) {
+        window.localStorage.setItem(key, JSON.stringify({ value: value }));
+    };
+    var load = function (key) {
+        var json = window.localStorage.getItem(key);
+        if (json) {
+            return JSON.parse(json).value;
+        }
+    };
+    var loadArray = function (key, proto) {
+        var props = storableProperties.get(proto);
+        var arr = load(key);
+        if (!arr || functions_1$1.isUndef(props)) {
+            return;
+        }
+        return arr.map(function (i) {
+            return props.reduce(function (p, c) {
+                p[c] = i[c];
+                return p;
+            }, new (Function.prototype.bind.apply(proto)));
+        });
+    };
+    var storeArray = function (key, arr, proto) {
+        var props = storableProperties.get(proto);
+        if (functions_1$1.isUndef(props)) {
+            throw Error('@LocalStorage array items must have at least one @Storable() property');
+        }
+        var value = arr.map(function (i) { return objects_1$1.getSubset(props, i); });
+        setTimeout(function () { return store(key, value); }, 80);
+    };
+    var storeListener = function (arr, callback) {
+        var listener = {
+            sort: callback,
+            splice: function (i, d, a) {
+                if (a.length) {
+                    a.forEach(function (item) {
+                        var proto = Object.getPrototypeOf(item), props = storableProperties.get(proto.constructor);
+                        props.forEach(function (prop) {
+                            objects_1$1.addPropertyListener(item, prop, callback);
+                        });
+                    });
+                }
+                if (a.length || d > 0) {
+                    callback();
+                }
+            }
+        };
+        arrays_1$1.observeArray(arr, listener);
+        listener.splice(0, 0, arr);
+    };
+    var handler = function (arrayType) { return function (widget) {
+        var props = localStorageProperties.get(Object.getPrototypeOf(widget));
+        if (props) {
+            props.forEach(function (prop) {
+                var storeKey = widgetId(widget) + '.' + prop;
+                var value = widget[prop];
+                if (Array.isArray(value)) {
+                    var type_1 = functions_1$1.isDef(arrayType) ? arrayType() : undefined;
+                    if (functions_1$1.isUndef(type_1)) {
+                        throw Error('Stored arrays need an arrayType argument');
+                    }
+                    try {
+                        var tryValue = loadArray(storeKey, type_1);
+                        if (functions_1$1.isDef(tryValue)) {
+                            value = widget[prop] = tryValue;
+                        }
+                    }
+                    catch (e) {
+                        console.warn('LocalStorage loading failed...ignoring');
+                        // format changed or something else failed
+                    }
+                    storeListener(value, function () {
+                        storeArray(storeKey, value, type_1);
+                    });
+                }
+                else {
+                    var tryValue = load(storeKey);
+                    if (functions_1$1.isDef(tryValue)) {
+                        widget[prop] = tryValue;
+                    }
+                    objects_1$1.addPropertyListener(widget, prop, function () {
+                        store(storeKey, widget[prop]);
+                    });
+                }
+            });
+        }
+    }; };
+    exports.LocalStorage = function (arrayType) { return function (proto, property) {
+        objects_1$1.ensure(localStorageProperties, proto, [property]);
+        construct_1$1.addToConstructorQueue(proto.constructor, handler(arrayType));
+    }; };
+    exports.Storable = function () { return function (proto, property) {
+        objects_1$1.ensure(storableProperties, proto.constructor, [property]);
+    }; };
+    // todo: write test somehow
+
+    });
+
+    var localStorage$1 = unwrapExports(localStorage);
+    var localStorage_1 = localStorage.LocalStorage;
+    var localStorage_2 = localStorage.Storable;
+
+    var localStorage$2 = /*#__PURE__*/Object.freeze({
+        default: localStorage$1,
+        __moduleExports: localStorage,
+        LocalStorage: localStorage_1,
+        Storable: localStorage_2
+    });
+
+    var mediaQuery = createCommonjsModule(function (module, exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+
+
+    exports.MediaQuery = function (query) { return function (proto, method) {
+        construct_1$1.addToConstructorQueue(proto.constructor, function (widget, node) {
+            var handler = function (mq) {
+                if (mq.matches) {
+                    proto[method].call(widget, node);
+                }
+                return handler;
+            };
+            var mediaQueryList = window.matchMedia(query);
+            mediaQueryList.addListener(handler(mediaQueryList));
+            cleanup_1$1.registerCleanUp(node, function () { return mediaQueryList.removeListener(handler); });
+        });
+    }; };
+    // todo: write test somehow
+
+    });
+
+    var mediaQuery$1 = unwrapExports(mediaQuery);
+    var mediaQuery_1 = mediaQuery.MediaQuery;
+
+    var mediaQuery$2 = /*#__PURE__*/Object.freeze({
+        default: mediaQuery$1,
+        __moduleExports: mediaQuery,
+        MediaQuery: mediaQuery_1
+    });
+
+    var router = createCommonjsModule(function (module, exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+
+
+
+    exports.routeListeners = {};
+    var namedRx = /[:*]\w+/gi;
+    var historyAPI = (window.history && window.history.pushState) && document.querySelector('[routing="hash"]') === null;
+    var rules = [
+        [/:\w+/gi, '([\\w\\d-]+)'],
+        [/\*\w+/gi, '(.+)']
+    ];
+    // supports :param and *param and optional parts ()
+    var namedMatch = function (pattern, input) {
+        var names = pattern.match(namedRx);
+        if (names && names.length) {
+            names = names.map(function (str) { return str.substr(1); });
+            var repl = rules.reduce(function (p, c) { return p.replace(c[0], c[1]); }, pattern), finalR = new RegExp('^' + repl + '$', 'gi');
+            return strings_1$1.namedRegexMatch(input, finalR, names);
+        }
+        else {
+            if (new RegExp('^' + pattern + '$', 'gi').exec(input)) {
+                return {};
+            }
+        }
+    };
+    var getCurrentRoute = function () {
+        var path = location.pathname;
+        if (!historyAPI) {
+            if (path !== '/') {
+                location.replace('/#' + path);
+            }
+            else {
+                path = !location.hash ? '/' : location.hash.replace(/^#/, '');
+            }
+        }
+        return path;
+    };
+    var notifyListeners = function (route) {
+        Object.values(exports.routeListeners).forEach(function (handlers) {
+            return handlers.forEach(function (rh) {
+                var matchedParams = namedMatch(rh.route, route);
+                if (matchedParams) {
+                    rh.callback(matchedParams);
+                }
+            });
+        });
+    };
+    exports.navigate = function (path) {
+        if (historyAPI) {
+            history.pushState(null, '', path);
+            notifyListeners(getCurrentRoute());
+        }
+        else {
+            location.hash = path;
+        }
+    };
+    exports.runRoutes = function () {
+        if (!window['blockRouting']) {
+            notifyListeners(getCurrentRoute());
+        }
+        window.addEventListener(historyAPI ? 'popstate' : 'hashchange', function () { return notifyListeners(getCurrentRoute()); }, false);
+    };
+    exports.Route = function (route) { return function (proto, method) {
+        construct_1$1.addToConstructorQueue(proto.constructor, function (widget, node) {
+            if (!exports.routeListeners[route]) {
+                exports.routeListeners[route] = [];
+            }
+            var handler = { route: route, callback: widget[method].bind(widget) };
+            exports.routeListeners[route].push(handler);
+            cleanup_1$1.registerCleanUp(node, function () { return exports.routeListeners[route].splice(exports.routeListeners[route].indexOf(handler), 1); });
+        });
+    }; };
+
+    });
+
+    var router$1 = unwrapExports(router);
+    var router_1 = router.routeListeners;
+    var router_2 = router.navigate;
+    var router_3 = router.runRoutes;
+    var router_4 = router.Route;
+
+    var router$2 = /*#__PURE__*/Object.freeze({
+        default: router$1,
+        __moduleExports: router,
+        routeListeners: router_1,
+        navigate: router_2,
+        runRoutes: router_3,
+        Route: router_4
+    });
+
+    var inject = createCommonjsModule(function (module, exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+
+
+    exports.Inject = function () { return function (proto, property) {
+        construct_1$1.addToConstructorQueue(proto.constructor, function (widget) {
+            var singleton = construct_1$1.Singletons[property];
+            if (functions_1$1.isDef(singleton)) {
+                widget[property] = singleton;
+            }
+        });
+    }; };
+
+    });
+
+    var inject$1 = unwrapExports(inject);
+    var inject_1 = inject.Inject;
+
+    var inject$2 = /*#__PURE__*/Object.freeze({
+        default: inject$1,
+        __moduleExports: inject,
+        Inject: inject_1
+    });
+
+    var require$$7 = ( fetch$2 && fetch$1 ) || fetch$2;
+
+    var require$$8 = ( localStorage$2 && localStorage$1 ) || localStorage$2;
+
+    var require$$9 = ( mediaQuery$2 && mediaQuery$1 ) || mediaQuery$2;
+
+    var require$$10 = ( router$2 && router$1 ) || router$2;
+
+    var require$$13 = ( inject$2 && inject$1 ) || inject$2;
+
+    var feather = createCommonjsModule(function (module, exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    var functions_1 = functions_1$1;
+    exports.isDef = functions_1.isDef;
+    exports.isUndef = functions_1.isUndef;
+    exports.isFunction = functions_1.isFunction;
+    exports.compose = functions_1.compose;
+    var arrays_1 = arrays_1$1;
+    exports.observeArray = arrays_1.observeArray;
+    exports.range = arrays_1.range;
+    exports.removeFromArray = arrays_1.removeFromArray;
+    var objects_1 = objects_1$1;
+    exports.ensure = objects_1.ensure;
+    exports.addPropertyListener = objects_1.addPropertyListener;
+    exports.deepValue = objects_1.deepValue;
+    exports.getSubset = objects_1.getSubset;
+    exports.isObject = objects_1.isObject;
+    exports.merge = objects_1.merge;
+    var dom_1 = dom_1$1;
+    exports.allChildNodes = dom_1.allChildNodes;
+    exports.allTextNodes = dom_1.allTextNodes;
+    var computed_1 = computed_1$1;
+    exports.Computed = computed_1.Computed;
+    var construct_1 = construct_1$1;
+    exports.start = construct_1.start;
+    exports.addToConstructorQueue = construct_1.addToConstructorQueue;
+    exports.Construct = construct_1.Construct;
+    var event_1 = event_1$1;
+    exports.On = event_1.On;
+    exports.Scope = event_1.Scope;
+    var fetch_1 = require$$7;
+    exports.Delete = fetch_1.Delete;
+    exports.Get = fetch_1.Get;
+    exports.Post = fetch_1.Post;
+    exports.Put = fetch_1.Put;
+    var local_storage_1 = require$$8;
+    exports.Storable = local_storage_1.Storable;
+    exports.LocalStorage = local_storage_1.LocalStorage;
+    var media_query_1 = require$$9;
+    exports.MediaQuery = media_query_1.MediaQuery;
+    var router_1 = require$$10;
+    exports.navigate = router_1.navigate;
+    exports.runRoutes = router_1.runRoutes;
+    var transformer_1 = transformer_1$1;
+    exports.Transformer = transformer_1.Transformer;
+    var inject_1 = require$$13;
+    exports.Inject = inject_1.Inject;
+    var template_1 = template_1$1;
+    exports.Template = template_1.Template;
+    var template_node_1$$1 = template_node_1;
+    exports.TemplateNode = template_node_1$$1.TemplateNode;
+    var bind_1 = bind_1$1;
+    exports.findWidget = bind_1.findWidget;
+    exports.findWidgets = bind_1.findWidgets;
+    exports.render = bind_1.render;
+    exports.Batch = bind_1.Batch;
+    var cleanup_1 = cleanup_1$1;
+    exports.registerCleanUp = cleanup_1.registerCleanUp;
+
+    });
+
+    unwrapExports(feather);
+    var feather_1 = feather.isDef;
+    var feather_2 = feather.isUndef;
+    var feather_3 = feather.isFunction;
+    var feather_4 = feather.compose;
+    var feather_5 = feather.observeArray;
+    var feather_6 = feather.range;
+    var feather_7 = feather.removeFromArray;
+    var feather_8 = feather.ensure;
+    var feather_9 = feather.addPropertyListener;
+    var feather_10 = feather.deepValue;
+    var feather_11 = feather.getSubset;
+    var feather_12 = feather.isObject;
+    var feather_13 = feather.merge;
+    var feather_14 = feather.allChildNodes;
+    var feather_15 = feather.allTextNodes;
+    var feather_16 = feather.Computed;
+    var feather_17 = feather.start;
+    var feather_18 = feather.addToConstructorQueue;
+    var feather_19 = feather.Construct;
+    var feather_20 = feather.On;
+    var feather_21 = feather.Scope;
+    var feather_22 = feather.Delete;
+    var feather_23 = feather.Get;
+    var feather_24 = feather.Post;
+    var feather_25 = feather.Put;
+    var feather_26 = feather.Storable;
+    var feather_27 = feather.LocalStorage;
+    var feather_28 = feather.MediaQuery;
+    var feather_29 = feather.navigate;
+    var feather_30 = feather.runRoutes;
+    var feather_31 = feather.Transformer;
+    var feather_32 = feather.Inject;
+    var feather_33 = feather.Template;
+    var feather_34 = feather.TemplateNode;
+    var feather_35 = feather.findWidget;
+    var feather_36 = feather.findWidgets;
+    var feather_37 = feather.render;
+    var feather_38 = feather.Batch;
+    var feather_39 = feather.registerCleanUp;
 
     var DatePicker = /** @class */ (function (_super) {
         __extends(DatePicker, _super);
@@ -2307,6 +2860,9 @@ var datepicker = (function (exports) {
         __decorate([
             event_2({ event: 'click', selector: '.years > li' })
         ], DatePicker.prototype, "yearClicked", null);
+        __decorate([
+            feather_38()
+        ], DatePicker.prototype, "goTo", null);
         __decorate([
             template_14()
         ], DatePicker.prototype, "markup", null);

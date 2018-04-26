@@ -13,6 +13,7 @@ import {FormWidget, FormWidgetConfig} from '@feather-ts/ui-common/dist/form-widg
 import './year-selector'
 import './month-selector'
 import './date-picker.pcss'
+import {Batch} from '@feather-ts/feather-ts'
 
 export interface DatePickerConfig extends FormWidgetConfig<Date> {
     dateFormat: 'DD.MM.YYYY'
@@ -116,6 +117,7 @@ export class DatePicker extends FormWidget<DatePickerConfig> {
         findWidget(this, SnapScroll).reset(1)
     }
 
+    @Batch()
     goTo(date: Date) {
         this.months.splice(0, this.months.length,
             new Month(monthOffset(date, -1)),
