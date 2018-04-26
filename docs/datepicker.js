@@ -908,7 +908,7 @@ var datepicker = (function (exports) {
             listeners.push(listener);
         }
     };
-    function domArrayListener(arr, el, filter, changeHappened, onItemAdded) {
+    function domArrayListener(arr, el, filter, onItemAdded) {
         var firstChild = el.firstElementChild; // usually null, lists that share a parent with other nodes are prepended.
         var nodeVisible = [];
         var elementMap = new WeakMap();
@@ -922,7 +922,6 @@ var datepicker = (function (exports) {
                     copy[i] = nodeVisible[indices[i]];
                 }
                 nodeVisible = copy;
-                changeHappened();
             },
             splice: function (index, deleteCount, added, deleted) {
                 if (deleted === void 0) { deleted = []; }
@@ -948,21 +947,16 @@ var datepicker = (function (exports) {
                     }
                 }
                 patch.splice.apply(patch, [index, deleteCount].concat(added.map(function () { return true; })));
-                var change = false;
                 for (var i = 0, n = arr.length; i < n; i++) {
                     patch[i] = filter(arr[i], i);
+                    var itemNode = elementMap.get(arr[i]);
                     if (patch[i] && !nodeVisible[i]) {
                         var nextVisible = nodeVisible.indexOf(true, i), refNode = ~nextVisible ? elementMap.get(arr[nextVisible]) : firstChild;
-                        el.insertBefore(elementMap.get(arr[i]), refNode);
-                        change = true;
+                        el.insertBefore(itemNode, refNode);
                     }
-                    else if (!patch[i] && nodeVisible[i]) {
-                        el.removeChild(elementMap.get(arr[i]));
-                        change = true;
+                    else if (!patch[i] && nodeVisible[i] && itemNode.parentNode === el) {
+                        el.removeChild(itemNode);
                     }
-                }
-                if (deleteCount || added.length || change) {
-                    changeHappened();
                 }
                 nodeVisible = patch;
             }
@@ -1094,7 +1088,7 @@ var datepicker = (function (exports) {
      * visible elements. Dispatch code in connectTemplate method.
      */
     var UPDATE_KEY = '__update__';
-    var Update = function () { return new CustomEvent(UPDATE_KEY, { bubbles: true, cancelable: false }); };
+    var Update = function () { return new CustomEvent(UPDATE_KEY, { bubbles: true, cancelable: false, scoped: false }); };
     var updateDomValue = function (node, info, value, oldValue) {
         if (info.type === template.TemplateTokenType.TEXT) {
             node.textContent = functions_1$1.isDef(value) ? value : '';
@@ -1127,7 +1121,8 @@ var datepicker = (function (exports) {
                 continue;
             }
             var oldValue = oldValueMap[i], value = valueMap[i];
-            if (info.type === template.TemplateTokenType.PROPERTY && (Array.isArray(value) || value instanceof FilteredArray)) { // ignore arrays
+            if (value === ARRAY_TAG) { // ignore arrays
+                widget[info.path()].splice(0, 0);
                 continue;
             }
             if (oldValue !== value) {
@@ -1187,11 +1182,12 @@ var datepicker = (function (exports) {
         }
         return FilteredArray;
     }()); // flag class for update check
+    var ARRAY_TAG = new FilteredArray();
     var getInfoValue = function (widget, info, transformMap) {
         var path = info.path(), transformer = transformMap[info.curly()];
         var v = objects_1$1.deepValue(widget, path);
         if (Array.isArray(v) && functions_1$1.isFunction(transformer(v))) {
-            return new FilteredArray();
+            return ARRAY_TAG;
         }
         else {
             v = functions_1$1.isFunction(v) ? v.call(widget) : v;
@@ -1206,12 +1202,12 @@ var datepicker = (function (exports) {
         }
         return map;
     };
-    var bindArray = function (array, node, widget, info, templateName, changeHappened) {
+    var bindArray = function (array, parentNode, widget, info, templateName) {
         var method = info.arrayTransformer(), transformer = (widget[method] || transformer_1$1.TransformerRegistry[method]).bind(widget);
-        var listener = arrays_1$1.domArrayListener(array, node, transformer(), changeHappened, function (item) {
+        var listener = arrays_1$1.domArrayListener(array, parentNode, transformer(), function (item) {
             var template$$1 = template.getTemplate(item, templateName()), node = template$$1.nodes[1];
             construct.runConstructorQueue(item, node);
-            exports.connectTemplate(item, node, template$$1, node);
+            exports.connectTemplate(item, node, template$$1, parentNode);
             return node;
         });
         arrays_1$1.observeArray(array, listener);
@@ -1249,7 +1245,7 @@ var datepicker = (function (exports) {
         }
         node.removeAttribute('template');
     };
-    var bindTemplateInfos = function (template$$1, widget, updateTemplate, transformMap, arrayListeners) {
+    var bindTemplateInfos = function (template$$1, widget, updateTemplate, transformMap) {
         var bound = [];
         var infos = template$$1.infos;
         var _loop_2 = function (info, i, n) {
@@ -1275,7 +1271,7 @@ var datepicker = (function (exports) {
                     else {
                         templateName = function () { return attributeValue_1; };
                     }
-                    arrayListeners.push(bindArray(value, node, widget, info, templateName, function () { return updateTemplate(false); }));
+                    bindArray(value, node, widget, info, templateName);
                     node.removeAttribute('template');
                 }
             }
@@ -1301,22 +1297,17 @@ var datepicker = (function (exports) {
         }
     };
     exports.connectTemplate = function (widget, el, template$$1, parentNode) {
-        var transformMap = getTransformMap(widget, template$$1), arrayListeners = [];
+        if (parentNode === void 0) { parentNode = el.parentNode; }
+        var transformMap = getTransformMap(widget, template$$1);
         var res = updateDom(widget, template$$1, transformMap, []);
-        var updateTemplate = function (array) {
-            if (array === void 0) { array = true; }
+        var updateTemplate = function () {
             res = updateDom(widget, template$$1, transformMap, res.valueMap);
             if (res.change) {
                 parentNode.dispatchEvent(Update()); // let's inform parent widgets
             }
-            if (array) {
-                for (var i = 0, n = arrayListeners.length; i < n; i++) {
-                    arrayListeners[i].splice(0, 0, [], []);
-                }
-            }
         };
         el.addEventListener(UPDATE_KEY, function () { return functions_1$1.throttle(updateTemplate, 80); });
-        bindTemplateInfos(template$$1, widget, updateTemplate, transformMap, arrayListeners);
+        bindTemplateInfos(template$$1, widget, updateTemplate, transformMap);
         template_node_1.injectTemplateNodes(widget, template$$1.nodes);
     };
     var transformFactory = function (widget, transformers) {
@@ -1338,7 +1329,7 @@ var datepicker = (function (exports) {
         }
         el.innerHTML = '';
         var template$$1 = template.getTemplate(widget, name);
-        exports.connectTemplate(widget, el, template$$1, el.parentNode);
+        exports.connectTemplate(widget, el, template$$1);
         el.appendChild(template$$1.doc);
     };
     exports.findWidgets = function (widget, type) {
