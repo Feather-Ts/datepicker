@@ -54,6 +54,7 @@ export class DatePicker extends FormWidget<DatePickerConfig> {
         this.showDropDown = false
         this.monthSelectorVisible = false
         this.yearSelectorVisible = false
+        findWidget(this, SnapScroll).abort(1)
     }
 
     @On({event: 'click', selector: '.next-month'})
