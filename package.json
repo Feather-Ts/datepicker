@@ -15,8 +15,8 @@
     },
     "homepage": "https://github.com/feather-ts/datepicker#readme",
     "dependencies": {
-        "@feather-ts/feather-ts": "^2.0.63",
-        "@feather-ts/ui-common": "1.0.61",
+        "@feather-ts/feather-ts": "^2.0.70",
+        "@feather-ts/ui-common": "^1.0.63",
         "@fortawesome/fontawesome-free-webfonts": "1.0.6",
         "bulma": "0.7.0",
         "fecha": "2.3.3"

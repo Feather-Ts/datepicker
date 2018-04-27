@@ -922,7 +922,6 @@ var datepicker = (function (exports) {
         }
     };
     function domArrayListener(arr, el, filter, update, onItemAdded) {
-        var firstChild = el.firstElementChild; // usually null, lists that share a parent with other nodes are prepended.
         var nodeVisible = [];
         var elementMap = new WeakMap();
         var listener = {
@@ -938,35 +937,35 @@ var datepicker = (function (exports) {
             },
             splice: function (index, deleteCount, added, deleted) {
                 if (deleted === void 0) { deleted = []; }
-                var patch = Array.from(nodeVisible);
-                nodeVisible.splice.apply(nodeVisible, [index, deleteCount].concat(added.map(function () { return false; })));
+                var patch = Array.from(nodeVisible), patchHelper = [index, deleteCount].concat(added.map(function () { return false; }));
+                nodeVisible.splice.apply(nodeVisible, patchHelper);
                 if (deleteCount) {
-                    for (var _i = 0, deleted_1 = deleted; _i < deleted_1.length; _i++) {
-                        var del = deleted_1[_i];
+                    for (var del = void 0, d = 0; d < deleteCount; d++) {
+                        del = deleted[d];
                         var node = elementMap.get(del);
-                        if (node.parentElement === el) {
+                        if (node && node.parentElement === el) {
                             el.removeChild(node);
+                            cleanup_1$1.cleanUp(node);
+                            elementMap.delete(del);
                         }
-                        elementMap.delete(del);
-                        cleanup_1$1.cleanUp(node);
                     }
                     update();
                 }
                 if (added.length) {
-                    for (var _a = 0, added_1 = added; _a < added_1.length; _a++) {
-                        var item = added_1[_a];
+                    for (var item = void 0, a = 0, n = added.length; a < n; a++) {
+                        item = added[a];
                         if (!elementMap.has(item)) {
                             elementMap.set(item, onItemAdded(item));
                         }
                     }
                     update();
                 }
-                patch.splice.apply(patch, [index, deleteCount].concat(added.map(function () { return true; })));
+                patch.splice.apply(patch, patchHelper);
                 for (var i = 0, n = arr.length; i < n; i++) {
                     patch[i] = filter(arr[i], i);
                     var itemNode = elementMap.get(arr[i]);
                     if (patch[i] && !nodeVisible[i]) {
-                        var nextVisible = nodeVisible.indexOf(true, i), refNode = ~nextVisible ? elementMap.get(arr[nextVisible]) : firstChild;
+                        var nextVisible = nodeVisible.indexOf(true, i), refNode = ~nextVisible ? elementMap.get(arr[nextVisible]) : undefined;
                         el.insertBefore(itemNode, refNode);
                     }
                     else if (!patch[i] && nodeVisible[i] && itemNode.parentNode === el) {
@@ -1111,12 +1110,12 @@ var datepicker = (function (exports) {
             node.textContent = functions_1$1.isDef(value) ? value : '';
         }
         else if (info.type === template_1$1.TemplateTokenType.CLASS) {
-            !!oldValue && node.classList.remove(("" + oldValue).replace(/\s+/g, '-')) ||
-                !!value && node.classList.add(("" + value).replace(/\s+/g, '-'));
+            !!oldValue && node.classList.remove(("" + oldValue).replace(/\s+/g, '-'));
+            !!value && node.classList.add(("" + value).replace(/\s+/g, '-'));
         }
         else if (info.type === template_1$1.TemplateTokenType.ATTRIBUTE || info.type === template_1$1.TemplateTokenType.PROPERTY) {
             var attributeName = info.attribute || info.path();
-            if (/checked|value/i.test(attributeName)) {
+            if (/checked|value|selectedIndex/i.test(attributeName)) {
                 node[attributeName] = value;
             }
             else if (functions_1$1.isUndef(value) || value === false) {
@@ -1132,16 +1131,20 @@ var datepicker = (function (exports) {
     var updateDom = function (widget, template, transformMap, oldValueMap) {
         var domChanged = false;
         var valueMap = getCurrentValueMap(widget, template, transformMap);
-        for (var i = 0, n = template.infos.length; i < n; i++) {
-            var info = template.infos[i];
+        for (var info = void 0, i = 0, n = template.infos.length; i < n; i++) {
+            info = template.infos[i];
             if (info.type === template_1$1.TemplateTokenType.TAG) {
                 continue;
             }
-            var oldValue = oldValueMap[i], value = valueMap[i];
-            if (value === ARRAY_TAG) { // ignore arrays
+            var value = valueMap[i];
+            if (info.type === template_1$1.TemplateTokenType.PROPERTY && Array.isArray(value)) { // ignore array bindings
+                continue;
+            }
+            if (value === ARRAY_TAG) { // filter other arrays
                 widget[info.path()].splice(0, 0);
                 continue;
             }
+            var oldValue = oldValueMap[i];
             if (oldValue !== value) {
                 domChanged = true;
                 oldValueMap[i] = updateDomValue(template.nodes[info.position], info, value, oldValue);
@@ -1325,7 +1328,7 @@ var datepicker = (function (exports) {
                 }
             }
         };
-        el.addEventListener(UPDATE_KEY, updateTemplate);
+        el.addEventListener(UPDATE_KEY, updateTemplate, { passive: true, capture: false });
         bindTemplateInfos(template, widget, updateTemplate, transformMap);
         template_node_1.injectTemplateNodes(widget, template.nodes);
     };
@@ -1340,13 +1343,11 @@ var datepicker = (function (exports) {
     };
     exports.render = function (widget, el, name) {
         var children = dom_1$1.allChildNodes(el);
-        for (var node = void 0, i = 0, n = children.length; i < n; i++) {
+        for (var node = void 0, i = 1, n = children.length; i < n; i++) { // first element is 'el' itself
             node = children[i];
-            if (node !== el) {
-                cleanup_1$1.cleanUp(node);
-            }
+            cleanup_1$1.cleanUp(node);
+            el.removeChild(node);
         }
-        el.innerHTML = '';
         var template = template_1$1.getTemplate(widget, name);
         exports.connectTemplate(widget, el, template);
         el.appendChild(template.doc);
@@ -1464,28 +1465,58 @@ var datepicker = (function (exports) {
         On: event_2
     });
 
+    var util = createCommonjsModule(function (module, exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.hasPointers = 'onpointerdown' in document.documentElement;
+    exports.supportsOnlyTouch = /android|iphone|webos|ipad|ipod|blackberry/i.test(navigator.userAgent);
+    exports.addEventListeners = function (types, node, listener, options) {
+        types.forEach(function (type) { return node.addEventListener(type, listener, options); });
+    };
+    exports.removeEventListeners = function (types, node, listener) {
+        types.forEach(function (type) { return node.removeEventListener(type, listener); });
+    };
+    var click = exports.hasPointers ? 'pointerdown' : 'touchstart';
+    exports.documentClick = function (el, func) {
+        var doc = document.documentElement;
+        var handler = function (ev) {
+            if (!el.contains(ev.target)) {
+                doc.removeEventListener(click, handler);
+                func();
+            }
+        };
+        doc.addEventListener(click, handler);
+    };
+
+    });
+
+    unwrapExports(util);
+    var util_1 = util.hasPointers;
+    var util_2 = util.supportsOnlyTouch;
+    var util_3 = util.addEventListeners;
+    var util_4 = util.removeEventListeners;
+    var util_5 = util.documentClick;
+
     var panX = createCommonjsModule(function (module, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
 
 
-    var hasPointers = ('onpointerup' in document.documentElement);
+
     var PointerEvents = {
         start: ['pointerdown'],
         move: ['pointermove'],
         end: ['pointerup']
+    };
+    var OnlyTouch = {
+        start: ['touchstart'],
+        move: ['touchmove'],
+        end: ['touchend']
     };
     var NoPointerEvents = {
         start: ['touchstart', 'mousedown'],
         move: ['touchmove', 'mousemove'],
         end: ['touchend', 'mouseup']
     };
-    var eventSet = hasPointers ? PointerEvents : NoPointerEvents;
-    var addEventListeners = function (types, node, listener, options) {
-        types.forEach(function (type) { return node.addEventListener(type, listener, options); });
-    };
-    var removeEventListeners = function (types, node, listener) {
-        types.forEach(function (type) { return node.removeEventListener(type, listener); });
-    };
+    var eventSet = util.hasPointers ? PointerEvents : (util.supportsOnlyTouch ? OnlyTouch : NoPointerEvents);
     var Phase;
     (function (Phase) {
         Phase[Phase["start"] = 0] = "start";
@@ -1553,8 +1584,8 @@ var datepicker = (function (exports) {
             };
             doc.addEventListener(eventSet.end[setIndex], endListener);
         };
-        addEventListeners(eventSet.start, node, handler);
-        cleanup_1$1.registerCleanUp(node, function () { return removeEventListeners(eventSet.start, node, handler); });
+        util.addEventListeners(eventSet.start, node, handler);
+        cleanup_1$1.registerCleanUp(node, function () { return util.removeEventListeners(eventSet.start, node, handler); });
     };
     exports.PanX = function (conf) {
         if (conf === void 0) { conf = {}; }
@@ -1696,24 +1727,6 @@ var datepicker = (function (exports) {
 
     unwrapExports(snapScroll$1);
     var snapScroll_1 = snapScroll$1.SnapScroll;
-
-    var util = createCommonjsModule(function (module, exports) {
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.documentClick = function (el, func) {
-        var doc = document.documentElement;
-        var handler = function (ev) {
-            if (!el.contains(ev.target)) {
-                doc.removeEventListener('pointerdown', handler);
-                func();
-            }
-        };
-        doc.addEventListener('pointerdown', handler);
-    };
-
-    });
-
-    unwrapExports(util);
-    var util_1 = util.documentClick;
 
     var fecha = createCommonjsModule(function (module) {
     (function (main) {
@@ -2090,7 +2103,7 @@ var datepicker = (function (exports) {
         return arrays_2(0, 41).map(function (day) { return dayOffset(start, day); });
     };
 
-    var css$1 = "date-picker {\r\n    max-width: 200px;\r\n    display: block;\r\n}\r\n\r\n    date-picker .icon.icon {\r\n        cursor: pointer;\r\n        pointer-events: initial !important;\r\n        color: #fff;\r\n    }\r\n\r\n    date-picker .head {\r\n        display: -webkit-box;\r\n        display: -ms-flexbox;\r\n        display: flex;\r\n        margin-top: -4px;\r\n        padding-bottom: 4px;\r\n    }\r\n\r\n    date-picker .head div {\r\n            -webkit-box-flex: 1;\r\n                -ms-flex: auto;\r\n                    flex: auto;\r\n            text-align: center;\r\n        }\r\n\r\n    date-picker .head span {\r\n            -webkit-box-flex: 0;\r\n                -ms-flex: 0 0 27px;\r\n                    flex: 0 0 27px;\r\n            text-align: center;\r\n            cursor: pointer;\r\n        }\r\n\r\n    date-picker .head span .icon.icon {\r\n                height: 16px;\r\n                height: 1rem;\r\n                width: 16px;\r\n                width: 1rem;\r\n                position: relative;\r\n                color: black;\r\n            }\r\n\r\n    date-picker .dropdown {\r\n        width: 27px;\r\n        -webkit-user-select: none;\r\n           -moz-user-select: none;\r\n            -ms-user-select: none;\r\n                user-select: none;\r\n    }\r\n\r\n    date-picker .dropdown-menu {\r\n        width: 198px;\r\n    }\r\n\r\n    date-picker .dropdown-content {\r\n        background-color: whitesmoke;\r\n        padding-bottom: 0;\r\n    }\r\n\r\n    date-picker .viewport {\r\n        border-radius: 4px;\r\n        padding-bottom: 8px;\r\n        padding-bottom: .5rem;\r\n        position: relative;\r\n    }\r\n\r\n    date-picker .month {\r\n        font-size: 12px;\r\n        font-size: .75rem;\r\n    }\r\n\r\n    date-picker .month ul {\r\n            display: -webkit-box;\r\n            display: -ms-flexbox;\r\n            display: flex;\r\n            -ms-flex-wrap: wrap;\r\n                flex-wrap: wrap;\r\n            width: 100%;\r\n        }\r\n\r\n    date-picker .month ul.weekdays {\r\n                background-color: whitesmoke;\r\n                color: #a4a4a4;\r\n            }\r\n\r\n    date-picker .month ul li {\r\n                -webkit-box-flex: 0;\r\n                    -ms-flex: 0 0 14.28571%;\r\n                        flex: 0 0 14.28571%;\r\n                display: block;\r\n                text-align: center;\r\n                line-height: 24px;\r\n                line-height: 1.5rem;\r\n            }\r\n\r\n    date-picker .month ul li.today {\r\n                    background-color: #cc415d !important;\r\n                    color: white !important;\r\n                }\r\n\r\n    date-picker .month ul.dates {\r\n                -webkit-tap-highlight-color: rgba(0, 0, 0, 0);\r\n                cursor: pointer;\r\n                background-color: white;\r\n            }\r\n\r\n    date-picker .months:not(.drag) .dates > li:hover {\r\n        background-color: #d8e7f1;\r\n    }\r\n";
+    var css$1 = "date-picker {\r\n    max-width: 200px;\r\n    display: block;\r\n    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);\r\n}\r\n\r\n    date-picker .icon.icon {\r\n        cursor: pointer;\r\n        pointer-events: initial !important;\r\n        color: #fff;\r\n    }\r\n\r\n    date-picker .head {\r\n        display: -webkit-box;\r\n        display: -ms-flexbox;\r\n        display: flex;\r\n        margin-top: -4px;\r\n        padding-bottom: 4px;\r\n    }\r\n\r\n    date-picker .head div {\r\n            -webkit-box-flex: 1;\r\n                -ms-flex: auto;\r\n                    flex: auto;\r\n            text-align: center;\r\n        }\r\n\r\n    date-picker .head span {\r\n            -webkit-box-flex: 0;\r\n                -ms-flex: 0 0 27px;\r\n                    flex: 0 0 27px;\r\n            text-align: center;\r\n            cursor: pointer;\r\n        }\r\n\r\n    date-picker .head span .icon.icon {\r\n                height: 16px;\r\n                height: 1rem;\r\n                width: 16px;\r\n                width: 1rem;\r\n                position: relative;\r\n                color: black;\r\n            }\r\n\r\n    date-picker .dropdown {\r\n        width: 27px;\r\n        -webkit-user-select: none;\r\n           -moz-user-select: none;\r\n            -ms-user-select: none;\r\n                user-select: none;\r\n    }\r\n\r\n    date-picker .dropdown-menu {\r\n        width: 198px;\r\n    }\r\n\r\n    date-picker .dropdown-content {\r\n        background-color: whitesmoke;\r\n        padding-bottom: 0;\r\n    }\r\n\r\n    date-picker .viewport {\r\n        border-radius: 4px;\r\n        padding-bottom: 8px;\r\n        padding-bottom: .5rem;\r\n        position: relative;\r\n    }\r\n\r\n    date-picker .month {\r\n        font-size: 12px;\r\n        font-size: .75rem;\r\n    }\r\n\r\n    date-picker .month ul {\r\n            display: -webkit-box;\r\n            display: -ms-flexbox;\r\n            display: flex;\r\n            -ms-flex-wrap: wrap;\r\n                flex-wrap: wrap;\r\n            width: 100%;\r\n        }\r\n\r\n    date-picker .month ul.weekdays {\r\n                background-color: whitesmoke;\r\n                color: #a4a4a4;\r\n            }\r\n\r\n    date-picker .month ul li {\r\n                -webkit-box-flex: 0;\r\n                    -ms-flex: 0 0 14.28571%;\r\n                        flex: 0 0 14.28571%;\r\n                display: block;\r\n                text-align: center;\r\n                line-height: 24px;\r\n                line-height: 1.5rem;\r\n            }\r\n\r\n    date-picker .month ul li.today {\r\n                    background-color: #cc415d !important;\r\n                    color: white !important;\r\n                }\r\n\r\n    date-picker .month ul.dates {\r\n                -webkit-tap-highlight-color: rgba(0, 0, 0, 0);\r\n                cursor: pointer;\r\n                background-color: white;\r\n            }\r\n\r\n    date-picker .months:not(.drag) .dates > li:hover {\r\n        background-color: #d8e7f1;\r\n    }\r\n";
     styleInject(css$1);
 
     var Day = /** @class */ (function () {
@@ -2201,27 +2214,6 @@ var datepicker = (function (exports) {
     unwrapExports(formWidget);
     var formWidget_1 = formWidget.FormWidget;
 
-    var MonthSelector = /** @class */ (function () {
-        function MonthSelector() {
-            var _this = this;
-            this.init = function (el) {
-                _this.months = arrays_2(0, 11).map(function (i) { return new Day(new Date(2017, i, 1)); });
-                bind_2(_this, el);
-            };
-            this.format = function (date) { return fecha_1(date, 'MMM'); };
-        }
-        MonthSelector.prototype.markup = function () {
-            return "<ul class=\"year-months\" template=\"month\" {{months}}/>";
-        };
-        __decorate([
-            template_14()
-        ], MonthSelector.prototype, "markup", null);
-        MonthSelector = __decorate([
-            construct_4({ selector: 'month-selector' })
-        ], MonthSelector);
-        return MonthSelector;
-    }());
-
     var fetch_1 = createCommonjsModule(function (module, exports) {
     var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
         var extendStatics = Object.setPrototypeOf ||
@@ -2331,7 +2323,6 @@ var datepicker = (function (exports) {
 
 
 
-    var localStorageProperties = new WeakMap();
     var storableProperties = new WeakMap();
     var widgetId = function (widget) {
         var id = widget.id || widget.name || widget.title || widget.constructor.name;
@@ -2359,13 +2350,19 @@ var datepicker = (function (exports) {
             }, new (Function.prototype.bind.apply(proto)));
         });
     };
+    var storeQueue = new WeakMap();
     var storeArray = function (key, arr, proto) {
-        var props = storableProperties.get(proto);
-        if (functions_1$1.isUndef(props)) {
-            throw Error('@LocalStorage array items must have at least one @Storable() property');
+        if (storeQueue.has(arr)) {
+            clearTimeout(storeQueue.get(arr));
         }
-        var value = arr.map(function (i) { return objects_1$1.getSubset(props, i); });
-        setTimeout(function () { return store(key, value); }, 80);
+        storeQueue.set(arr, setTimeout(function () {
+            var props = storableProperties.get(proto);
+            if (functions_1$1.isUndef(props)) {
+                throw Error('@LocalStorage array items must have at least one @Storable() property');
+            }
+            var value = arr.map(function (i) { return objects_1$1.getSubset(props, i); });
+            store(key, value);
+        }, 80));
     };
     var storeListener = function (arr, callback) {
         var listener = {
@@ -2387,51 +2384,44 @@ var datepicker = (function (exports) {
         arrays_1$1.observeArray(arr, listener);
         listener.splice(0, 0, arr);
     };
-    var handler = function (arrayType) { return function (widget) {
-        var props = localStorageProperties.get(Object.getPrototypeOf(widget));
-        if (props) {
-            props.forEach(function (prop) {
-                var storeKey = widgetId(widget) + '.' + prop;
-                var value = widget[prop];
-                if (Array.isArray(value)) {
-                    var type_1 = functions_1$1.isDef(arrayType) ? arrayType() : undefined;
-                    if (functions_1$1.isUndef(type_1)) {
-                        throw Error('Stored arrays need an arrayType argument');
-                    }
-                    try {
-                        var tryValue = loadArray(storeKey, type_1);
-                        if (functions_1$1.isDef(tryValue)) {
-                            value = widget[prop] = tryValue;
-                        }
-                    }
-                    catch (e) {
-                        console.warn('LocalStorage loading failed...ignoring');
-                        // format changed or something else failed
-                    }
-                    storeListener(value, function () {
-                        storeArray(storeKey, value, type_1);
-                    });
+    var handler = function (prop, arrayType) { return function (widget) {
+        var storeKey = widgetId(widget) + '.' + prop;
+        var value = widget[prop];
+        if (Array.isArray(value)) {
+            var type_1 = functions_1$1.isDef(arrayType) ? arrayType() : undefined;
+            if (functions_1$1.isUndef(type_1)) {
+                throw Error("Stored array '" + prop + "' needs an arrayType factory argument");
+            }
+            try {
+                var tryValue = loadArray(storeKey, type_1);
+                if (functions_1$1.isDef(tryValue)) {
+                    value = widget[prop] = tryValue;
                 }
-                else {
-                    var tryValue = load(storeKey);
-                    if (functions_1$1.isDef(tryValue)) {
-                        widget[prop] = tryValue;
-                    }
-                    objects_1$1.addPropertyListener(widget, prop, function () {
-                        store(storeKey, widget[prop]);
-                    });
-                }
+            }
+            catch (e) {
+                console.warn('LocalStorage loading failed...ignoring');
+                // format changed or something else failed
+            }
+            storeListener(value, function () {
+                storeArray(storeKey, value, type_1);
+            });
+        }
+        else {
+            var tryValue = load(storeKey);
+            if (functions_1$1.isDef(tryValue)) {
+                widget[prop] = tryValue;
+            }
+            objects_1$1.addPropertyListener(widget, prop, function () {
+                store(storeKey, widget[prop]);
             });
         }
     }; };
     exports.LocalStorage = function (arrayType) { return function (proto, property) {
-        objects_1$1.ensure(localStorageProperties, proto, [property]);
-        construct_1$1.addToConstructorQueue(proto.constructor, handler(arrayType));
+        construct_1$1.addToConstructorQueue(proto.constructor, handler(property, arrayType));
     }; };
     exports.Storable = function () { return function (proto, property) {
         objects_1$1.ensure(storableProperties, proto.constructor, [property]);
     }; };
-    // todo: write test somehow
 
     });
 
@@ -2454,7 +2444,7 @@ var datepicker = (function (exports) {
         construct_1$1.addToConstructorQueue(proto.constructor, function (widget, node) {
             var handler = function (mq) {
                 if (mq.matches) {
-                    proto[method].call(widget, node);
+                    widget[method].call(widget, node);
                 }
                 return handler;
             };
@@ -2463,7 +2453,6 @@ var datepicker = (function (exports) {
             cleanup_1$1.registerCleanUp(node, function () { return mediaQueryList.removeListener(handler); });
         });
     }; };
-    // todo: write test somehow
 
     });
 
@@ -2720,6 +2709,27 @@ var datepicker = (function (exports) {
     var feather_38 = feather.Batch;
     var feather_39 = feather.registerCleanUp;
 
+    var MonthSelector = /** @class */ (function () {
+        function MonthSelector() {
+            var _this = this;
+            this.init = function (el) {
+                _this.months = arrays_2(0, 11).map(function (i) { return new Day(new Date(2017, i, 1)); });
+                bind_2(_this, el);
+            };
+            this.format = function (date) { return fecha_1(date, 'MMM'); };
+        }
+        MonthSelector.prototype.markup = function () {
+            return "<ul class=\"year-months\" template=\"month\" {{months}}/>";
+        };
+        __decorate([
+            template_14()
+        ], MonthSelector.prototype, "markup", null);
+        MonthSelector = __decorate([
+            construct_4({ selector: 'month-selector' })
+        ], MonthSelector);
+        return MonthSelector;
+    }());
+
     var DatePicker = /** @class */ (function (_super) {
         __extends(DatePicker, _super);
         function DatePicker() {
@@ -2747,7 +2757,7 @@ var datepicker = (function (exports) {
             var _this = this;
             if (!this.showDropDown) {
                 this.showDropDown = true;
-                util_1(this.element, function () { return _this.close(); });
+                util_5(this.element, function () { return _this.close(); });
             }
             else {
                 this.close();
@@ -2818,7 +2828,6 @@ var datepicker = (function (exports) {
             this.config.changed(date);
         };
         DatePicker.prototype.slideChanged = function (slide) {
-            console.log(this);
             this.currentMonth = this.months[slide].date;
             if (slide === 0) {
                 this.months.unshift(new Month(monthOffset(this.currentMonth, -1)));
@@ -2872,7 +2881,7 @@ var datepicker = (function (exports) {
         return DatePicker;
     }(formWidget_1));
 
-    var css$3 = "body {\n    padding: 40px\n}\n";
+    var css$3 = "body {\n    padding: 40px;\n    min-height: 100vh;\n}\n";
     styleInject(css$3);
 
     var Showcase = /** @class */ (function () {
