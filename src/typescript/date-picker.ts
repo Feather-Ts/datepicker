@@ -10,10 +10,10 @@ import {findWidget, render} from '@feather-ts/feather-ts/dist/core/bind'
 import {On, Scope} from '@feather-ts/feather-ts/dist/decorators/event'
 import {Template} from '@feather-ts/feather-ts/dist/decorators/template'
 import {FormWidget, FormWidgetConfig} from '@feather-ts/ui-common/dist/form-widget'
+import {Batch} from '@feather-ts/feather-ts'
 import './year-selector'
 import './month-selector'
 import './date-picker.pcss'
-import {Batch} from '@feather-ts/feather-ts'
 
 export interface DatePickerConfig extends FormWidgetConfig<Date> {
     dateFormat: 'DD.MM.YYYY'
@@ -133,7 +133,6 @@ export class DatePicker extends FormWidget<DatePickerConfig> {
     }
 
     slideChanged(slide: number) {
-        console.log(this)
         this.currentMonth = this.months[slide].date
         if (slide === 0) {
             this.months.unshift(new Month(monthOffset(this.currentMonth, -1)))
