@@ -15,15 +15,15 @@
     },
     "homepage": "https://github.com/feather-ts/datepicker#readme",
     "dependencies": {
-        "@feather-ts/feather-ts": "^2.0.80",
-        "@feather-ts/ui-common": "^1.0.70",
+        "@feather-ts/feather-ts": "^2.0.83",
+        "@feather-ts/ui-common": "^1.0.79",
         "@fortawesome/fontawesome-free-webfonts": "1.0.6",
         "bulma": "0.7.0",
         "fecha": "2.3.3"
     },
     "peerDependencies": {
-        "@feather-ts/feather-ts": "^2.0.80",
-        "@feather-ts/ui-common": "^1.0.70"
+        "@feather-ts/feather-ts": "^2.0.83",
+        "@feather-ts/ui-common": "^1.0.79"
     },
     "devDependencies": {
         "npm-run-all": "4.1.2",
@@ -58,7 +58,7 @@
         "css:compile": "postcss src/typescript/**/*.pcss --dir dist --base",
         "prepare": "npm-run-all clean npm:version css:compile ui:compile",
         "bundle-docs": "rollup -c",
-        "minify": "uglifyjs --compress --mangle -o docs/datepicker.min.js -- docs/datepicker.js",
+        "minify": "uglifyjs --compress -o docs/datepicker.min.js -- docs/datepicker.js",
         "docs": "npm-run-all bundle-docs minify",
         "test": "mocha --require ts-node/register --require src/javascript/mocha-setup.js src/typescript/**/*.spec.ts"
     }

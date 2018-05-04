@@ -1,4 +1,4 @@
-import {range} from '@feather-ts/feather-ts/dist/utils/arrays'
+import {range} from '@feather-ts/feather-ts'
 
 export const dayOffset = (date: Date, offset: number) =>
     new Date(+date + (offset * 24 * 60 * 60 * 1000))
