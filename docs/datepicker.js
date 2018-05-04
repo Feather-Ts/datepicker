@@ -491,13 +491,25 @@ var datepicker = (function (exports) {
         });
     }; };
     var queue = new WeakMap();
+    var renderQueue = new WeakMap();
     exports.addToConstructorQueue = function (constructor, func) {
         objects_1$1.ensure(queue, constructor, [func]);
+    };
+    exports.addToRenderQueue = function (constructor, func) {
+        objects_1$1.ensure(renderQueue, constructor, [func]);
     };
     exports.runConstructorQueue = function (widget, node) {
         var widgetQueue = queue.get(Object.getPrototypeOf(widget).constructor) || [];
         for (var i = 0, n = widgetQueue.length; i < n; i++) { // for performance
             widgetQueue[i].call(widget, widget, node);
+        }
+    };
+    exports.runAfterRenderQueue = function (widget, nodes) {
+        var widgetQueue = renderQueue.get(Object.getPrototypeOf(widget).constructor) || [];
+        for (var i = 0, n = widgetQueue.length; i < n; i++) { // for performance use for-loops
+            for (var m = 0, l = nodes.length; m < l; m++) {
+                widgetQueue[i].call(widget, widget, nodes[m]);
+            }
         }
     };
 
@@ -509,7 +521,9 @@ var datepicker = (function (exports) {
     var construct_3 = construct.start;
     var construct_4 = construct.Construct;
     var construct_5 = construct.addToConstructorQueue;
-    var construct_6 = construct.runConstructorQueue;
+    var construct_6 = construct.addToRenderQueue;
+    var construct_7 = construct.runConstructorQueue;
+    var construct_8 = construct.runAfterRenderQueue;
 
     var construct$2 = /*#__PURE__*/Object.freeze({
         default: construct$1,
@@ -519,7 +533,9 @@ var datepicker = (function (exports) {
         start: construct_3,
         Construct: construct_4,
         addToConstructorQueue: construct_5,
-        runConstructorQueue: construct_6
+        addToRenderQueue: construct_6,
+        runConstructorQueue: construct_7,
+        runAfterRenderQueue: construct_8
     });
 
     var functions = createCommonjsModule(function (module, exports) {
@@ -604,7 +620,7 @@ var datepicker = (function (exports) {
             if (this._transformers.length > 1) {
                 throw Error('Array filter transformer can have only one method');
             }
-            return this.transformers()[0] || 'arrayidentity';
+            return this.transformers()[0];
         };
         return TemplateTokenInfo;
     }());
@@ -627,8 +643,10 @@ var datepicker = (function (exports) {
         }
         return root;
     };
+    var templateTag = document.createElement('template');
     exports.getFragment = function (html) {
-        return document.createRange().createContextualFragment(html);
+        templateTag.innerHTML = html;
+        return document.importNode(templateTag.content, true);
     };
     var ParsedTemplate = /** @class */ (function () {
         function ParsedTemplate(doc, nodes, infos) {
@@ -792,9 +810,7 @@ var datepicker = (function (exports) {
     var transformer = createCommonjsModule(function (module, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
 
-    exports.TransformerRegistry = {
-        arrayidentity: function () { return function () { return true; }; }
-    };
+    exports.TransformerRegistry = {};
     exports.Transformer = function () { return function (proto, method) {
         construct_1$1.addToConstructorQueue(proto.constructor, function (widget) {
             exports.TransformerRegistry[method] = widget[method].bind(widget);
@@ -816,6 +832,7 @@ var datepicker = (function (exports) {
 
     var arrays = createCommonjsModule(function (module, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
+
 
     var observers = new WeakMap();
     function removeFromArray(arr, elements) {
@@ -921,7 +938,7 @@ var datepicker = (function (exports) {
             listeners.push(listener);
         }
     };
-    function domArrayListener(arr, el, filter, update, onItemAdded) {
+    function domArrayListener(arr, el, update, onItemAdded, filter) {
         var nodeVisible = [];
         var elementMap = new WeakMap();
         var listener = {
@@ -945,24 +962,23 @@ var datepicker = (function (exports) {
                         var node = elementMap.get(del);
                         if (node && node.parentElement === el) {
                             el.removeChild(node);
-                            cleanup_1$1.cleanUp(node);
-                            elementMap.delete(del);
                         }
+                        cleanup_1$1.cleanUp(node);
+                        elementMap.delete(del);
                     }
-                    update();
                 }
                 if (added.length) {
                     for (var item = void 0, a = 0, n = added.length; a < n; a++) {
                         item = added[a];
-                        if (!elementMap.has(item)) {
-                            elementMap.set(item, onItemAdded(item));
-                        }
+                        elementMap.set(item, onItemAdded(item));
                     }
-                    update();
+                }
+                if (deleteCount || added.length) {
+                    update(true);
                 }
                 patch.splice.apply(patch, patchHelper);
                 for (var i = 0, n = arr.length; i < n; i++) {
-                    patch[i] = filter(arr[i], i);
+                    patch[i] = functions_1$1.isUndef(filter) || filter(arr[i], i);
                     var itemNode = elementMap.get(arr[i]);
                     if (patch[i] && !nodeVisible[i]) {
                         var nextVisible = nodeVisible.indexOf(true, i), refNode = ~nextVisible ? elementMap.get(arr[nextVisible]) : undefined;
@@ -1035,42 +1051,31 @@ var datepicker = (function (exports) {
         Computed: computed_2
     });
 
-    var templateNode = createCommonjsModule(function (module, exports) {
+    var inArray_1 = createCommonjsModule(function (module, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
 
-
-    var TemplateNodes = new WeakMap();
-    exports.TemplateNode = function (selector) { return function (proto, property) {
-        objects_1$1.ensure(TemplateNodes, proto, [{ selector: selector, property: property }]);
+    var inArray = new WeakMap();
+    exports.InArray = function () { return function (proto, property) {
+        objects_1$1.ensure(inArray, proto, property);
     }; };
-    exports.injectTemplateNodes = function (widget, nodes) {
+    exports.injectArray = function (widget, array) {
         var proto = Object.getPrototypeOf(widget);
-        var bindings = TemplateNodes.get(proto);
-        if (functions_1$1.isDef(bindings)) {
-            for (var _i = 0, bindings_1 = bindings; _i < bindings_1.length; _i++) {
-                var b = bindings_1[_i];
-                for (var _a = 0, nodes_1 = nodes; _a < nodes_1.length; _a++) {
-                    var n = nodes_1[_a];
-                    widget[b.property] = n.querySelector(b.selector);
-                    if (widget[b.property] !== null) {
-                        break;
-                    }
-                }
-            }
+        if (inArray.has(proto)) {
+            widget[inArray.get(proto)] = array;
         }
     };
 
     });
 
-    var templateNode$1 = unwrapExports(templateNode);
-    var templateNode_1 = templateNode.TemplateNode;
-    var templateNode_2 = templateNode.injectTemplateNodes;
+    var inArray = unwrapExports(inArray_1);
+    var inArray_2 = inArray_1.InArray;
+    var inArray_3 = inArray_1.injectArray;
 
-    var templateNode$2 = /*#__PURE__*/Object.freeze({
-        default: templateNode$1,
-        __moduleExports: templateNode,
-        TemplateNode: templateNode_1,
-        injectTemplateNodes: templateNode_2
+    var inArray$1 = /*#__PURE__*/Object.freeze({
+        default: inArray,
+        __moduleExports: inArray_1,
+        InArray: inArray_2,
+        injectArray: inArray_3
     });
 
     var template_1$1 = ( template$2 && template$1 ) || template$2;
@@ -1081,7 +1086,7 @@ var datepicker = (function (exports) {
 
     var computed_1$1 = ( computed$2 && computed$1 ) || computed$2;
 
-    var template_node_1 = ( templateNode$2 && templateNode$1 ) || templateNode$2;
+    var in_array_1 = ( inArray$1 && inArray ) || inArray$1;
 
     var bind = createCommonjsModule(function (module, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -1128,7 +1133,8 @@ var datepicker = (function (exports) {
         }
         return value;
     };
-    var updateDom = function (widget, template, transformMap, oldValueMap) {
+    var updateDom = function (widget, template, transformMap, oldValueMap, noArray) {
+        if (noArray === void 0) { noArray = false; }
         var domChanged = false;
         var valueMap = getCurrentValueMap(widget, template, transformMap);
         for (var info = void 0, i = 0, n = template.infos.length; i < n; i++) {
@@ -1137,11 +1143,13 @@ var datepicker = (function (exports) {
                 continue;
             }
             var value = valueMap[i];
-            if (info.type === template_1$1.TemplateTokenType.PROPERTY && Array.isArray(value)) { // ignore array bindings
+            if (value === ARRAY_TAG) { // ignore array bindings
                 continue;
             }
-            if (value === ARRAY_TAG) { // filter other arrays
-                widget[info.path()].splice(0, 0);
+            if (value === FILTERED_ARRAY_TAG) { // filter other arrays
+                if (!noArray) {
+                    widget[info.path()].splice(0, 0);
+                }
                 continue;
             }
             var oldValue = oldValueMap[i];
@@ -1197,17 +1205,13 @@ var datepicker = (function (exports) {
         }
         construct_1$1.runConstructorQueue(subWidget, node);
     };
-    var FilteredArray = /** @class */ (function () {
-        function FilteredArray() {
-        }
-        return FilteredArray;
-    }()); // flag class for update check
-    var ARRAY_TAG = new FilteredArray();
+    var ARRAY_TAG = Symbol('array_tag');
+    var FILTERED_ARRAY_TAG = Symbol('filtered_array_tag');
     var getInfoValue = function (widget, info, transformMap) {
         var path = info.path(), transformer = transformMap[info.curly()];
         var v = objects_1$1.deepValue(widget, path);
-        if (Array.isArray(v) && functions_1$1.isFunction(transformer(v))) {
-            return ARRAY_TAG;
+        if (info.type === template_1$1.TemplateTokenType.PROPERTY && Array.isArray(v)) {
+            return functions_1$1.isFunction(transformer(v)) ? FILTERED_ARRAY_TAG : ARRAY_TAG;
         }
         else {
             v = functions_1$1.isFunction(v) ? v.call(widget) : v;
@@ -1223,13 +1227,14 @@ var datepicker = (function (exports) {
         return map;
     };
     var bindArray = function (array, parentNode, widget, info, templateName, update) {
-        var method = info.arrayTransformer(), transformer = (widget[method] || transformer_1$1.TransformerRegistry[method]).bind(widget);
-        var listener = arrays_1$1.domArrayListener(array, parentNode, transformer(), update, function (item) {
+        var transformer = info.arrayTransformer() ? transformFactory(widget, info.transformers())() : undefined;
+        var listener = arrays_1$1.domArrayListener(array, parentNode, update, function (item) {
+            in_array_1.injectArray(item, array);
             var template = template_1$1.getTemplate(item, templateName()), node = template.nodes[1];
             construct_1$1.runConstructorQueue(item, node);
             exports.connectTemplate(item, node, template, parentNode);
             return node;
-        });
+        }, transformer);
         arrays_1$1.observeArray(array, listener);
         return listener;
     };
@@ -1285,6 +1290,7 @@ var datepicker = (function (exports) {
                     if (functions_1$1.isDef(templateInfo_1) && template_1$1.CURLIES.test(attributeValue_1)) {
                         templateName = function () { return getInfoValue(widget, templateInfo_1, transformMap); };
                         objects_1$1.addPropertyListener(widget, templateInfo_1.path(), function () {
+                            // this is expensive, should only run for particular listeners
                             value.splice.apply(value, [0, value.length].concat(value));
                         });
                     }
@@ -1320,17 +1326,17 @@ var datepicker = (function (exports) {
         if (parentNode === void 0) { parentNode = el.parentNode; }
         var transformMap = getTransformMap(widget, template);
         var res = updateDom(widget, template, transformMap, []);
-        var updateTemplate = function () {
+        var updateTemplate = function (noArray) {
+            if (noArray === void 0) { noArray = false; }
             if (!mutedWidget.has(widget)) {
-                res = updateDom(widget, template, transformMap, res.valueMap);
+                res = updateDom(widget, template, transformMap, res.valueMap, noArray);
                 if (res.change) {
                     parentNode.dispatchEvent(Update()); // let's inform parent widgets
                 }
             }
         };
-        el.addEventListener(UPDATE_KEY, updateTemplate, { passive: true, capture: false });
+        el.addEventListener(UPDATE_KEY, function () { return updateTemplate(); }, { passive: true, capture: false });
         bindTemplateInfos(template, widget, updateTemplate, transformMap);
-        template_node_1.injectTemplateNodes(widget, template.nodes);
     };
     var transformFactory = function (widget, transformers) {
         return functions_1$1.compose(transformers.map(function (m) {
@@ -1345,12 +1351,15 @@ var datepicker = (function (exports) {
         var children = dom_1$1.allChildNodes(el);
         for (var node = void 0, i = 1, n = children.length; i < n; i++) { // first element is 'el' itself
             node = children[i];
+            if (node.parentNode === el) {
+                el.removeChild(node);
+            }
             cleanup_1$1.cleanUp(node);
-            el.removeChild(node);
         }
         var template = template_1$1.getTemplate(widget, name);
         exports.connectTemplate(widget, el, template);
         el.appendChild(template.doc);
+        construct_1$1.runAfterRenderQueue(widget, Array.from(el.children));
     };
     exports.findWidgets = function (widget, type) {
         return subWidgets.get(widget).filter(function (t) { return Object.getPrototypeOf(t) === type.prototype; });
@@ -1439,7 +1448,7 @@ var datepicker = (function (exports) {
     var attachEvents = function (conf) { return function (widget, node) {
         var events = Array.isArray(conf.event) ? conf.event : [conf.event];
         events.forEach(function (event) {
-            if (Scope.Direct && functions_1$1.isDef(conf.selector)) {
+            if (conf.scope === Scope.Direct && functions_1$1.isDef(conf.selector)) {
                 node = node.querySelector(conf.selector);
             }
             var handler = createHandler(event, conf, widget, node, conf.scope === Scope.Direct || functions_1$1.isUndef(conf.selector));
@@ -1484,7 +1493,7 @@ var datepicker = (function (exports) {
                 func();
             }
         };
-        doc.addEventListener(click, handler);
+        doc.addEventListener(click, handler, { passive: false, capture: false });
     };
 
     });
@@ -1525,8 +1534,10 @@ var datepicker = (function (exports) {
     })(Phase = exports.Phase || (exports.Phase = {}));
     var getPanXEvent = function (ev, phase, extra) {
         if (extra === void 0) { extra = {}; }
-        var x = ev.clientX || (ev.touches && ev.touches.length ? ev.touches[0].pageX : ev.changedTouches[0].pageX);
-        var y = ev.clientY || (ev.touches && ev.touches.length ? ev.touches[0].pageY : ev.changedTouches[0].pageY);
+        var x = ev.clientX || (ev.touches && ev.touches.length ?
+            ev.touches[0].pageX : ev.changedTouches[0].pageX);
+        var y = ev.clientY || (ev.touches && ev.touches.length ?
+            ev.touches[0].pageY : ev.changedTouches[0].pageY);
         return new CustomEvent('pan-x', {
             bubbles: true,
             cancelable: true,
@@ -1536,7 +1547,8 @@ var datepicker = (function (exports) {
                 phase: phase,
                 diffX: x - extra.startX,
                 diffY: y - extra.startY,
-                diffTime: +new Date() - extra.startTime
+                diffTime: +new Date() - extra.startTime,
+                target: ev.target
             }
         });
     };
@@ -1705,6 +1717,10 @@ var datepicker = (function (exports) {
                     }
                     break;
             }
+        };
+        SnapScroll.prototype.abort = function (slide) {
+            this.element.classList.remove('animate');
+            this.go(slide, false);
         };
         SnapScroll.prototype.transitionend = function (ev) {
             this.element.classList.remove('animate');
@@ -2195,6 +2211,26 @@ var datepicker = (function (exports) {
         return YearSelector;
     }());
 
+    var templateNode = createCommonjsModule(function (module, exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+
+    exports.TemplateNode = function (selector) { return function (proto, property) {
+        construct_1$1.addToRenderQueue(proto.constructor, function (widget, node) {
+            widget[property] = node.querySelector(selector);
+        });
+    }; };
+
+    });
+
+    var templateNode$1 = unwrapExports(templateNode);
+    var templateNode_1 = templateNode.TemplateNode;
+
+    var templateNode$2 = /*#__PURE__*/Object.freeze({
+        default: templateNode$1,
+        __moduleExports: templateNode,
+        TemplateNode: templateNode_1
+    });
+
     var bind_1$1 = ( bind$2 && bind$1 ) || bind$2;
 
     var formWidget = createCommonjsModule(function (module, exports) {
@@ -2441,16 +2477,17 @@ var datepicker = (function (exports) {
 
 
     exports.MediaQuery = function (query) { return function (proto, method) {
+        var mediaQueryHandler = function (widget, node) { return function (mq) {
+            if (mq.matches) {
+                widget[method].call(widget, node);
+            }
+        }; };
         construct_1$1.addToConstructorQueue(proto.constructor, function (widget, node) {
-            var handler = function (mq) {
-                if (mq.matches) {
-                    widget[method].call(widget, node);
-                }
-                return handler;
-            };
             var mediaQueryList = window.matchMedia(query);
-            mediaQueryList.addListener(handler(mediaQueryList));
+            var handler = mediaQueryHandler(widget, node);
+            mediaQueryList.addListener(handler);
             cleanup_1$1.registerCleanUp(node, function () { return mediaQueryList.removeListener(handler); });
+            handler(mediaQueryList);
         });
     }; };
 
@@ -2590,6 +2627,8 @@ var datepicker = (function (exports) {
 
     var require$$13 = ( inject$2 && inject$1 ) || inject$2;
 
+    var require$$14 = ( templateNode$2 && templateNode$1 ) || templateNode$2;
+
     var feather = createCommonjsModule(function (module, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
 
@@ -2656,8 +2695,8 @@ var datepicker = (function (exports) {
     exports.Inject = inject_1.Inject;
     var template_1 = template_1$1;
     exports.Template = template_1.Template;
-    var template_node_1$$1 = template_node_1;
-    exports.TemplateNode = template_node_1$$1.TemplateNode;
+    var template_node_1 = require$$14;
+    exports.TemplateNode = template_node_1.TemplateNode;
     var bind_1 = bind_1$1;
     exports.findWidget = bind_1.findWidget;
     exports.findWidgets = bind_1.findWidgets;
@@ -2767,6 +2806,7 @@ var datepicker = (function (exports) {
             this.showDropDown = false;
             this.monthSelectorVisible = false;
             this.yearSelectorVisible = false;
+            bind_4(this, snapScroll_1).abort(1);
         };
         DatePicker.prototype.nextMonth = function () {
             if (this.yearSelectorVisible) {
