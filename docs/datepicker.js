@@ -963,7 +963,9 @@ var datepicker = (function (exports) {
                         if (node && node.parentElement === el) {
                             el.removeChild(node);
                         }
-                        cleanup_1$1.cleanUp(node);
+                        if (functions_1$1.isDef(node)) {
+                            cleanup_1$1.cleanUp(node);
+                        }
                         elementMap.delete(del);
                     }
                 }
@@ -1498,12 +1500,24 @@ var datepicker = (function (exports) {
 
     });
 
-    unwrapExports(util);
+    var util$1 = unwrapExports(util);
     var util_1 = util.hasPointers;
     var util_2 = util.supportsOnlyTouch;
     var util_3 = util.addEventListeners;
     var util_4 = util.removeEventListeners;
     var util_5 = util.documentClick;
+
+    var util$2 = /*#__PURE__*/Object.freeze({
+        default: util$1,
+        __moduleExports: util,
+        hasPointers: util_1,
+        supportsOnlyTouch: util_2,
+        addEventListeners: util_3,
+        removeEventListeners: util_4,
+        documentClick: util_5
+    });
+
+    var util_1$1 = ( util$2 && util$1 ) || util$2;
 
     var panX = createCommonjsModule(function (module, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -1525,7 +1539,7 @@ var datepicker = (function (exports) {
         move: ['touchmove', 'mousemove'],
         end: ['touchend', 'mouseup']
     };
-    var eventSet = util.hasPointers ? PointerEvents : (util.supportsOnlyTouch ? OnlyTouch : NoPointerEvents);
+    var eventSet = util_1$1.hasPointers ? PointerEvents : (util_1$1.supportsOnlyTouch ? OnlyTouch : NoPointerEvents);
     var Phase;
     (function (Phase) {
         Phase[Phase["start"] = 0] = "start";
@@ -1596,8 +1610,8 @@ var datepicker = (function (exports) {
             };
             doc.addEventListener(eventSet.end[setIndex], endListener);
         };
-        util.addEventListeners(eventSet.start, node, handler);
-        cleanup_1$1.registerCleanUp(node, function () { return util.removeEventListeners(eventSet.start, node, handler); });
+        util_1$1.addEventListeners(eventSet.start, node, handler);
+        cleanup_1$1.registerCleanUp(node, function () { return util_1$1.removeEventListeners(eventSet.start, node, handler); });
     };
     exports.PanX = function (conf) {
         if (conf === void 0) { conf = {}; }
